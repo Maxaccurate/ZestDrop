@@ -611,5 +611,17 @@ internal static partial class L
         ["处理已取消，可调整参数后重新保存。"] = "Cancelled. Adjust the settings and save again.",
         ["保存未完成："] = "Save not completed: ",
         ["逐帧："] = "Frame step: ",
+        // Organized tray menu
+        ["文件转换与处理"] = "Convert and edit files",
+        ["处理剪贴板…"] = "Process clipboard…",
+        ["打开最近输出文件夹"] = "Open latest output folder",
+        ["暂无输出记录"] = "No recent outputs",
+        ["任务与进度"] = "Tasks and progress",
+        ["任务与进度（{0}）"] = "Tasks and progress ({0})",
+        ["自动处理"] = "Automation",
+        ["设置"] = "Settings",
+        ["轮盘"] = "Wheel",
+        ["帮助"] = "Help",
+        ["使用指南…"] = "Getting started…",
     };
 }

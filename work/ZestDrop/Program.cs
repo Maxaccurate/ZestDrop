@@ -41,6 +41,10 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        if (args.Length > 1 && args[0] == "--debug-render-tray")
+            return TrayMenuPreview.Render(args.Skip(1).ToArray());
+        if (args.Length > 0 && args[0] == "--debug-tray-menu")
+            return TrayMenuPreview.Run(args.Skip(1).ToArray());
         // Optional 5th argument: a scene such as "crop=250,200,800,600;ratio=4:3" or "busy" (see ToolWindow.DebugScene).
         if (args.Length is 4 or 5 && args[0] == "--debug-tool-render")
         {
@@ -346,6 +350,7 @@ internal sealed class Resident : IDisposable
     private readonly EventWaitHandle openRequest = new(false, EventResetMode.AutoReset, ExplorerIntegration.EventName);
 
     private Forms.ToolStripMenuItem? startupMenu;
+    private TrayMenu? trayMenu;
     public Resident(System.Windows.Application app, EventWaitHandle showRequest, bool startupLaunch = false)
     {
         this.app = app;
@@ -485,90 +490,61 @@ internal sealed class Resident : IDisposable
     private void BuildTrayMenu()
     {
         tray.Text = L.T("ZestDrop · 拖文件 + Shift 转换 / Ctrl+Shift 工具");
-        var old = tray.ContextMenuStrip;
-        var items = new Forms.ContextMenuStrip();
-        items.Items.Add(L.T("使用方式：拖文件 + Shift / Ctrl+Shift"), null, (_, _) => ShowWelcome());
-        items.Items.Add(new Forms.ToolStripSeparator());
-        var showProgress = items.Items.Add(L.T("显示处理进度"), null, (_, _) => taskIndicator.ShowAll());
-        var pauseAll = items.Items.Add(L.T("暂停全部任务"), null, (_, _) =>
+        var old = trayMenu;
+        var menu = new TrayMenu(new TrayMenuActions
         {
-            bool resume = !jobs.Any(CanPause) && jobs.Any(j => j.Pause != null);
-            foreach (var job in jobs.ToList())
-                if (resume) ResumeJob(job); else PauseJob(job);
-        });
-        var cancelAll = items.Items.Add(L.T("取消全部任务"), null, (_, _) => { foreach (var job in jobs.ToList()) CancelJob(job); });
-        items.Items.Add(L.T("第三方组件许可"), null, (_, _) => OpenNotices());
-        items.Items.Add(L.T("最近输出所在文件夹"), null, (_, _) => { if (lastOutput != null) ExplorerIntegration.Reveal(lastOutput); });
-        items.Items.Add(new Forms.ToolStripSeparator());
-        items.Items.Add(L.T("处理剪贴板里的图片或文件…"), null, (_, _) => OpenFromClipboard());
-        var recentMenu = new Forms.ToolStripMenuItem(L.T("最近输出"));
-        items.Items.Add(recentMenu);
-        var locationMenu = new Forms.ToolStripMenuItem(L.T("保存位置"));
-        var sameFolder = new Forms.ToolStripMenuItem(L.T("与原文件相同"), null, (_, _) => OutputFolder.Choose(null));
-        var otherFolder = new Forms.ToolStripMenuItem(L.T("选择文件夹…"), null, (_, _) => ChooseOutputFolder());
-        locationMenu.DropDownItems.AddRange([sameFolder, otherFolder]);
-        items.Items.Add(locationMenu);
-        items.Items.Add(L.T("监视文件夹…"), null, (_, _) => ShowWatchWindow());
-        var layoutMenu = new Forms.ToolStripMenuItem(L.T("工具较多时的轮盘"));
-        var mergedLayout = new Forms.ToolStripMenuItem(L.T("合并相关工具"), null, (_, _) => Settings.Set(Catalog.LayoutKey, "merged")) { Checked = !Catalog.TwoWheels };
-        var twoWheelLayout = new Forms.ToolStripMenuItem(L.T("两层轮盘"), null, (_, _) => Settings.Set(Catalog.LayoutKey, "twoWheels")) { Checked = Catalog.TwoWheels };
-        layoutMenu.DropDownItems.AddRange([mergedLayout, twoWheelLayout]);
-        layoutMenu.DropDownOpening += (_, _) => { mergedLayout.Checked = !Catalog.TwoWheels; twoWheelLayout.Checked = Catalog.TwoWheels; };
-        items.Items.Add(layoutMenu);
-        var themeMenu = new Forms.ToolStripMenuItem(L.T("外观"));
-        foreach (var (choice, label) in new[] { ("system", L.T("跟随系统")), ("light", L.T("浅色")), ("dark", L.T("深色")) })
-            themeMenu.DropDownItems.Add(new Forms.ToolStripMenuItem(label, null, (_, _) => { UiTheme.Choose(choice); taskIndicator.ApplyTheme(); }) { Tag = choice });
-        themeMenu.DropDownOpening += (_, _) => { foreach (Forms.ToolStripMenuItem item in themeMenu.DropDownItems) item.Checked = (string)item.Tag! == UiTheme.Choice; };
-        items.Items.Add(themeMenu);
-        items.Items.Add(L.T("自定义轮盘…"), null, (_, _) => { if (orderWindow == null) { orderWindow = new WheelOrderWindow(); orderWindow.Closed += (_, _) => orderWindow = null; orderWindow.Show(); } orderWindow.Activate(); });
-        items.Items.Add(L.T("流程…"), null, (_, _) => { if (flowWindow == null) { flowWindow = new FlowWindow(() => { }); flowWindow.Closed += (_, _) => flowWindow = null; flowWindow.Show(); } flowWindow.Activate(); });
-        Forms.ToolStripMenuItem? explorerItem = null;
-        if (ExplorerIntegration.Available)
-        {
-            explorerItem = new Forms.ToolStripMenuItem(L.T("资源管理器右键菜单"));
-            explorerItem.Click += (_, _) =>
+            Welcome = ShowWelcome,
+            Clipboard = OpenFromClipboard,
+            Progress = () => taskIndicator.ShowAll(),
+            Pause = () =>
             {
-                try
-                { ExplorerIntegration.Set(!ExplorerIntegration.Enabled); }
-                catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException) { Notify(L.T("资源管理器右键菜单"), ex.Message); }
-            };
-            items.Items.Add(explorerItem);
-        }
-        items.Items.Add(new Forms.ToolStripSeparator());
-        // Language names are shown in their own language so either can be found whatever is active.
-        var language = new Forms.ToolStripMenuItem(L.T("语言") + " / Language");
-        foreach (var (code, name) in new[] { ("zh", "简体中文"), ("en", "English") })
-            language.DropDownItems.Add(new Forms.ToolStripMenuItem(name, null, (_, _) => L.Language = code) { Checked = L.Language == code });
-        items.Items.Add(language);
-        startupMenu = new Forms.ToolStripMenuItem(L.T("开机自启"));
-        var startupItem = startupMenu;
-        startupItem.Click += async (_, _) =>
-        {
-            startupItem.Enabled = false;
-            var result = await StartupManager.SetAsync(!startupItem.Checked);
-            if (disposed) return;
-            startupItem.Checked = result.Enabled; startupItem.Enabled = result.CanChange;
-            if (result.Message != null) Notify(L.T("开机自启"), result.Message);
-        };
-        items.Items.Add(startupItem);
-        items.Items.Add(L.T("退出 ZestDrop"), null, (_, _) => app.Shutdown());
-        items.Opening += (_, _) =>
+                bool resume = !jobs.Any(CanPause) && jobs.Any(j => j.Pause != null);
+                foreach (var job in jobs.ToList())
+                    if (resume) ResumeJob(job); else PauseJob(job);
+            },
+            Cancel = () => { foreach (var job in jobs.ToList()) CancelJob(job); },
+            Watch = ShowWatchWindow,
+            Flows = () =>
+            {
+                if (flowWindow == null) { flowWindow = new FlowWindow(() => { }); flowWindow.Closed += (_, _) => flowWindow = null; flowWindow.Show(); }
+                flowWindow.Activate();
+            },
+            Customize = () =>
+            {
+                if (orderWindow == null) { orderWindow = new WheelOrderWindow(); orderWindow.Closed += (_, _) => orderWindow = null; orderWindow.Show(); }
+                orderWindow.Activate();
+            },
+            ChooseOutput = ChooseOutputFolder,
+            Reveal = output => { if (File.Exists(output) || Directory.Exists(output)) ExplorerIntegration.Reveal(output); },
+            Theme = choice => { UiTheme.Choose(choice); taskIndicator.ApplyTheme(); },
+            Explorer = () =>
+            {
+                try { ExplorerIntegration.Set(!ExplorerIntegration.Enabled); }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+                { Notify(L.T("资源管理器右键菜单"), ex.Message); }
+            },
+            Startup = async () =>
+            {
+                var item = startupMenu;
+                if (item == null) return;
+                item.Enabled = false;
+                var result = await StartupManager.SetAsync(!item.Checked);
+                if (disposed || item.IsDisposed) return;
+                item.Checked = result.Enabled;
+                item.Enabled = result.CanChange;
+                if (result.Message != null) Notify(L.T("开机自启"), result.Message);
+            },
+            Notices = OpenNotices,
+            Quit = () => app.Shutdown()
+        }, ExplorerIntegration.Available);
+        startupMenu = menu.Startup;
+        menu.Menu.Opening += (_, _) =>
         {
             RefreshStartupMenu();
-            recentMenu.DropDownItems.Clear();
-            foreach (string output in recent.Take(10))
-                recentMenu.DropDownItems.Add(Path.GetFileName(output) is { Length: > 0 } leaf ? leaf : output, null, (_, _) => { if (File.Exists(output) || Directory.Exists(output)) ExplorerIntegration.Reveal(output); });
-            recentMenu.Enabled = recent.Count > 0;
-            sameFolder.Checked = OutputFolder.Current == null;
-            otherFolder.Text = OutputFolder.Current is { } chosen ? L.T("选择文件夹…") + "  (" + chosen + ")" : L.T("选择文件夹…");
-            if (explorerItem != null)
-                explorerItem.Checked = ExplorerIntegration.Enabled;
-            bool canPause = jobs.Any(CanPause), canResume = jobs.Any(j => j.Pause != null);
-            showProgress.Enabled = cancelAll.Enabled = jobs.Count > 0;
-            pauseAll.Enabled = canPause || canResume;
-            pauseAll.Text = !canPause && canResume ? L.T("继续全部任务") : L.T("暂停全部任务");
+            menu.Update(recent, lastOutput, jobs.Count, jobs.Any(CanPause), jobs.Any(j => j.Pause != null));
         };
-        tray.ContextMenuStrip = items;
+        trayMenu = menu;
+        tray.ContextMenuStrip = menu.Menu;
         old?.Dispose();
         RefreshStartupMenu();
     }
@@ -868,6 +844,7 @@ internal sealed class Resident : IDisposable
         watch?.Dispose();
         openRequest.Dispose();
         tray.Dispose();
+        trayMenu?.Dispose();
         trayIcon.Dispose();
         welcome?.Close();
         wheel.Close();
