@@ -30,17 +30,28 @@ internal static class ExplorerIntegration
 
     public static void Set(bool on)
     {
+        string exe = Environment.ProcessPath ?? "";
+        string installFolder = AppContext.BaseDirectory;
+
         foreach (string root in Roots)
         {
             if (!on)
             { Registry.CurrentUser.DeleteSubKeyTree(root, false); continue; }
-            string exe = Environment.ProcessPath ?? "";
             using var key = Registry.CurrentUser.CreateSubKey(root);
             key.SetValue("MUIVerb", L.T("用 ZestDrop 处理…"));
             key.SetValue("Icon", exe);
             key.SetValue("MultiSelectModel", "Player");
             using var command = key.CreateSubKey("command");
             command.SetValue("", $"\"{exe}\" --open \"%1\"");
+        }
+
+        if (Platform.Windows.ExplorerMenuRegistration.IsSupportedOs)
+        {
+            Platform.Windows.ExplorerMenuRegistration.SetTitle(on ? L.T("用 ZestDrop 处理…") : null);
+            if (on && Platform.Windows.ExplorerMenuRegistration.HasFiles(installFolder) && Platform.Windows.ExplorerMenuRegistration.GetState(installFolder) == Platform.Windows.ModernContextMenuState.Off)
+            {
+                _ = Platform.Windows.ExplorerMenuRegistration.AddAsync(installFolder);
+            }
         }
     }
 

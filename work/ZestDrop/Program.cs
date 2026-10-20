@@ -39,9 +39,32 @@ internal static class Program
         }
     }
 
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool AttachConsole(int dwProcessId);
+    private const int ATTACH_PARENT_PROCESS = -1;
+
+    private static bool IsCliCommand(string cmd)
+    {
+        var c = cmd.ToLowerInvariant();
+        return c is "convert" or "watch" or "formats" or "help" or "--help" or "-h" or "/?" or "-?" or "version" or "--version" or "-v";
+    }
+
     [STAThread]
     public static int Main(string[] args)
     {
+        Engines.NativeEngines.Initialize();
+        if (args.Length > 0 && IsCliCommand(args[0]))
+        {
+            AttachConsole(ATTACH_PARENT_PROCESS);
+            using var cancel = new CancellationTokenSource();
+            Console.CancelKeyPress += (_, e) =>
+            {
+                if (cancel.IsCancellationRequested) return;
+                e.Cancel = true;
+                cancel.Cancel();
+            };
+            return Cli.CliRunner.RunAsync(args, Console.Out, Console.Error, cancel.Token).GetAwaiter().GetResult();
+        }
         if (DebugModes.Run(args) is int debugResult)
             return debugResult;
         if (args.Length == 4 && args[0] == "--office-export")
@@ -584,6 +607,31 @@ internal sealed class Resident : IDisposable
                 { recent.Remove(file.Output!); recent.Insert(0, file.Output!); }
                 if (recent.Count > 20)
                     recent.RemoveRange(20, recent.Count - 20);
+
+                if (queued.Job.Parameters != null &&
+                    queued.Job.Parameters.TryGetValue("_moveToOriginals", out string? move) &&
+                    move == "true" &&
+                    queued.Job.Parameters.TryGetValue("_originalsDir", out string? origDir) &&
+                    !string.IsNullOrWhiteSpace(origDir))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(origDir);
+                        foreach (var file in success)
+                        {
+                            if (File.Exists(file.Input))
+                            {
+                                string dest = Path.Combine(origDir, Path.GetFileName(file.Input));
+                                dest = Engines.OutputPathHelper.GetUniqueFilePath(dest);
+                                File.Move(file.Input, dest);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Journal.Write("MoveToOriginalsFailed", new { ex.Message });
+                    }
+                }
             }
             int failures = result.Files.Length - success.Length;
             Journal.Write("Completed", new { queued.Job.Action, count = result.Files.Length, success = success.Length, failures, errors = result.Files.Where(x => x.Error != null).Select(x => x.Error) });

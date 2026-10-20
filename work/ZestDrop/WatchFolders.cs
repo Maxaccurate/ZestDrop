@@ -7,9 +7,30 @@ using System.Threading.Tasks;
 
 namespace ZestDrop;
 
-// One watched folder: new files of this kind are processed with this action, and the results go to a sub-folder
-// of the watched one, so they are never picked up again.
-internal sealed record WatchRule(string Folder, string Kind, string Action);
+// One watched folder: new files matching filter/kind are processed with this action,
+// and results go to custom output folder or sub-folder of watched one.
+internal sealed class WatchRule
+{
+    public string Folder { get; set; } = "";
+    public string Kind { get; set; } = "image";
+    public string Action { get; set; } = "";
+    public bool IncludeSubfolders { get; set; } = false;
+    public string? OutputFolder { get; set; } = null;
+    public bool MoveToOriginals { get; set; } = false;
+    public string Filter { get; set; } = "";
+
+    public WatchRule() { }
+    public WatchRule(string folder, string kind, string action, bool includeSubfolders = false, string? outputFolder = null, bool moveToOriginals = false, string filter = "")
+    {
+        Folder = folder;
+        Kind = kind;
+        Action = action;
+        IncludeSubfolders = includeSubfolders;
+        OutputFolder = outputFolder;
+        MoveToOriginals = moveToOriginals;
+        Filter = filter;
+    }
+}
 
 internal sealed class WatchFolders : IDisposable
 {
@@ -38,15 +59,18 @@ internal sealed class WatchFolders : IDisposable
         watchers.Clear();
         foreach (var rule in Load().Where(r => Directory.Exists(r.Folder)))
         {
-            var watcher = new FileSystemWatcher(rule.Folder) { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size, EnableRaisingEvents = true };
+            var watcher = new FileSystemWatcher(rule.Folder)
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size,
+                IncludeSubdirectories = rule.IncludeSubfolders,
+                EnableRaisingEvents = true
+            };
             watcher.Created += (_, e) => _ = Guarded(rule, e.FullPath);
             watcher.Renamed += (_, e) => _ = Guarded(rule, e.FullPath);
             watchers.Add(watcher);
         }
     }
 
-    // "seen" stops the several events of one arrival from queuing the file twice. It is cleared once that arrival
-    // is handled, so a new file with the same name later on is processed again.
     private async Task Guarded(WatchRule rule, string path)
     {
         lock (seen)
@@ -63,9 +87,40 @@ internal sealed class WatchFolders : IDisposable
         string name = Path.GetFileName(path);
         if (name.StartsWith(".zestdrop-") || name.StartsWith("~$") || name.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase) || name.EndsWith(".crdownload", StringComparison.OrdinalIgnoreCase) || name.EndsWith(".part", StringComparison.OrdinalIgnoreCase))
             return;
-        if (Directory.Exists(path) || Catalog.Category(path) != rule.Kind)
+
+        string outputDir = !string.IsNullOrWhiteSpace(rule.OutputFolder) && Directory.Exists(rule.OutputFolder)
+            ? rule.OutputFolder
+            : Path.Combine(rule.Folder, OutputName);
+
+        string originalsDir = Path.Combine(rule.Folder, "originals");
+
+        // Ignore files inside output directory or originals directory
+        if (path.StartsWith(outputDir, StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(originalsDir, StringComparison.OrdinalIgnoreCase))
             return;
-        // A file that is still being copied or downloaded keeps growing or stays locked; wait until it settles.
+
+        if (Directory.Exists(path))
+            return;
+
+        if (rule.Kind != "all" && Catalog.Category(path) != rule.Kind)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(rule.Filter))
+        {
+            var patterns = rule.Filter.Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            bool matched = false;
+            foreach (var pattern in patterns)
+            {
+                if (System.IO.Enumeration.FileSystemName.MatchesSimpleExpression(pattern, name, ignoreCase: true))
+                {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) return;
+        }
+
+        // Wait until file is done copying / downloading
         long last = -1;
         for (int attempt = 0; attempt < 600; attempt++)
         {
@@ -82,27 +137,84 @@ internal sealed class WatchFolders : IDisposable
             }
             catch (IOException) { last = -1; }
         }
-        string output = Path.Combine(rule.Folder, OutputName);
+
         try
-        { Directory.CreateDirectory(output); }
+        { Directory.CreateDirectory(outputDir); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return; }
-        // Conversions have no settings to remember; tools start from their defaults and then the settings used last.
-        Dictionary<string, string> values = rule.Action.StartsWith("convert:") ? [] : Catalog.Definition(rule.Action, rule.Kind).Fields?.ToDictionary(f => f.Name, f => f.Default) ?? [];
+
+        Dictionary<string, string> values = rule.Action.StartsWith("convert:")
+            ? []
+            : Catalog.Definition(rule.Action, rule.Kind == "all" ? Catalog.Category(path) : rule.Kind).Fields?.ToDictionary(f => f.Name, f => f.Default) ?? [];
+
         if (Presets.Last(rule.Action) is { } remembered)
             foreach (var (field, value) in remembered)
                 if (values.ContainsKey(field))
                     values[field] = value;
-        values["_outputDir"] = output;
+
+        values["_outputDir"] = outputDir;
+        if (rule.MoveToOriginals)
+        {
+            values["_moveToOriginals"] = "true";
+            values["_originalsDir"] = originalsDir;
+        }
+
         enqueue(new ConversionJob([path], rule.Action, values));
     }
 
-    // What a rule can do, by kind of file: formats to convert to, and compressing with the settings last used.
     public static List<(string Action, string Label)> Actions(string kind)
     {
-        string[] targets = kind switch { "image" => ["jpg", "png", "webp"], "video" => ["mp4", "webm", "gif"], _ => ["mp3", "m4a", "wav", "flac"] };
-        var actions = targets.Select(target => ("convert:" + target, L.T("转换为 ") + target.ToUpperInvariant())).ToList();
-        actions.Add(("compress", L.T("压缩（沿用上次的设置）")));
-        return actions;
+        return kind switch
+        {
+            "model3d" => [
+                ("convert:glb", L.T("转换为 GLB (通用 3D)")),
+                ("convert:obj", L.T("转换为 OBJ (带材质)")),
+                ("convert:stl", L.T("转换为 STL (3D 打印)")),
+                ("convert:3mf", L.T("转换为 3MF (制造/切片)")),
+                ("convert:ply", L.T("转换为 PLY")),
+                ("convert:png", L.T("渲染等轴测预览图 (PNG)"))
+            ],
+            "cad" => [
+                ("convert:pdf", L.T("导出矢量 PDF")),
+                ("convert:svg", L.T("导出矢量 SVG")),
+                ("convert:png", L.T("渲染高清图片 (PNG)")),
+                ("convert:dwg", L.T("转换为 DWG (AutoCAD 2018)")),
+                ("convert:dxf", L.T("转换为 DXF (通用 CAD)"))
+            ],
+            "document" => [
+                ("convert:pdf", L.T("转换为 PDF")),
+                ("convert:docx", L.T("转换为 Word (DOCX)")),
+                ("convert:txt", L.T("提取纯文本 (TXT)")),
+                ("compress", L.T("压缩 PDF（沿用上次设置）"))
+            ],
+            "image" => [
+                ("convert:jpg", L.T("转换为 JPG")),
+                ("convert:png", L.T("转换为 PNG")),
+                ("convert:webp", L.T("转换为 WebP")),
+                ("convert:pdf", L.T("合并/导出为 PDF")),
+                ("makeIcon", L.T("制作图标 (ICO)")),
+                ("compress", L.T("压缩（沿用上次设置）")),
+                ("removeMetadata", L.T("清除元数据 / EXIF"))
+            ],
+            "video" => [
+                ("convert:mp4", L.T("转换为 MP4")),
+                ("convert:webm", L.T("转换为 WebM")),
+                ("convert:gif", L.T("转换为 GIF")),
+                ("convert:mp3", L.T("提取音频 (MP3)")),
+                ("muteVideo", L.T("静音 / 移除音轨")),
+                ("compress", L.T("压缩（沿用上次设置）"))
+            ],
+            "audio" => [
+                ("convert:mp3", L.T("转换为 MP3")),
+                ("convert:m4a", L.T("转换为 M4A / AAC")),
+                ("convert:wav", L.T("转换为 WAV")),
+                ("convert:flac", L.T("转换为 FLAC (无损)")),
+                ("normalizeAudio", L.T("标准化响度 (LUFS)")),
+                ("compress", L.T("压缩（沿用上次设置）"))
+            ],
+            _ => [
+                ("packArchive", L.T("打包为 ZIP 压缩包"))
+            ]
+        };
     }
 
     public void Dispose()
