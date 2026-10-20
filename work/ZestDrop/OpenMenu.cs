@@ -52,38 +52,98 @@ internal static class OpenMenu
         menu.Resources = CreateResources();
         menu.FlowDirection = L.Arabic ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
-        // A transparent full-screen window to detect clicks outside the menu and close it immediately.
         var anchor = new Window
         {
+            Width = 1,
+            Height = 1,
             WindowStyle = WindowStyle.None,
             AllowsTransparency = true,
             Background = Brushes.Transparent,
             ShowInTaskbar = false,
-            Topmost = true,
-            Left = SystemParameters.VirtualScreenLeft,
-            Top = SystemParameters.VirtualScreenTop,
-            Width = SystemParameters.VirtualScreenWidth,
-            Height = SystemParameters.VirtualScreenHeight
+            Topmost = true
         };
+
+        var pollTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+        bool initialMouseUp = !Native.Down(1) && !Native.Down(2);
 
         void CloseMenu()
         {
+            pollTimer.Stop();
             if (menu.IsOpen)
                 menu.IsOpen = false;
             try { anchor.Close(); } catch { }
         }
 
-        anchor.PreviewMouseDown += (_, _) => CloseMenu();
-        anchor.Deactivated += (_, _) => CloseMenu();
-        anchor.KeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Escape) CloseMenu(); };
+        pollTimer.Tick += (_, _) =>
+        {
+            if (!menu.IsOpen)
+            {
+                CloseMenu();
+                return;
+            }
+            if (Native.Down(0x1B)) // Escape key
+            {
+                CloseMenu();
+                return;
+            }
+            bool isDown = Native.Down(1) || Native.Down(2);
+            if (!initialMouseUp)
+            {
+                if (!isDown) initialMouseUp = true;
+                return;
+            }
+            if (isDown)
+            {
+                Native.GetCursorPos(out var pt);
+                if (!IsInsideMenu(menu, pt))
+                    CloseMenu();
+            }
+        };
 
+        anchor.Deactivated += (_, _) => CloseMenu();
         anchor.Show();
+        Native.GetCursorPos(out var point);
+        Native.SetWindowPos(new WindowInteropHelper(anchor).Handle, new IntPtr(-1), point.X, point.Y, 1, 1, 0x0040);
         anchor.Activate();
 
         menu.PlacementTarget = anchor;
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
         menu.Closed += (_, _) => CloseMenu();
         menu.IsOpen = true;
+        pollTimer.Start();
+    }
+
+    private static bool IsInsideMenu(ContextMenu menu, Native.POINT pt)
+    {
+        try
+        {
+            if (PresentationSource.FromVisual(menu) is HwndSource source &&
+                source.Handle != IntPtr.Zero &&
+                Native.GetWindowRect(source.Handle, out var rect))
+            {
+                if (pt.X >= rect.Left && pt.X <= rect.Right && pt.Y >= rect.Top && pt.Y <= rect.Bottom)
+                    return true;
+            }
+
+            foreach (var item in menu.Items.OfType<MenuItem>())
+            {
+                if (item.IsSubmenuOpen)
+                {
+                    if (item.Template?.FindName("PART_Popup", item) is System.Windows.Controls.Primitives.Popup popup &&
+                        popup.Child != null &&
+                        PresentationSource.FromVisual(popup.Child) is HwndSource subSource &&
+                        subSource.Handle != IntPtr.Zero &&
+                        Native.GetWindowRect(subSource.Handle, out var subRect))
+                    {
+                        if (pt.X >= subRect.Left && pt.X <= subRect.Right && pt.Y >= subRect.Top && pt.Y <= subRect.Bottom)
+                            return true;
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return false;
     }
 
     private static ResourceDictionary CreateResources()
