@@ -52,15 +52,37 @@ internal static class OpenMenu
         menu.Resources = CreateResources();
         menu.FlowDirection = L.Arabic ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
-        // The menu needs an active window to close properly when the user clicks elsewhere, so a one-pixel invisible one holds it.
-        var anchor = new Window { Width = 1, Height = 1, WindowStyle = WindowStyle.None, AllowsTransparency = true, Background = Brushes.Transparent, ShowInTaskbar = false, Topmost = true };
+        // A transparent full-screen window to detect clicks outside the menu and close it immediately.
+        var anchor = new Window
+        {
+            WindowStyle = WindowStyle.None,
+            AllowsTransparency = true,
+            Background = Brushes.Transparent,
+            ShowInTaskbar = false,
+            Topmost = true,
+            Left = SystemParameters.VirtualScreenLeft,
+            Top = SystemParameters.VirtualScreenTop,
+            Width = SystemParameters.VirtualScreenWidth,
+            Height = SystemParameters.VirtualScreenHeight
+        };
+
+        void CloseMenu()
+        {
+            if (menu.IsOpen)
+                menu.IsOpen = false;
+            try { anchor.Close(); } catch { }
+        }
+
+        anchor.PreviewMouseDown += (_, _) => CloseMenu();
+        anchor.Deactivated += (_, _) => CloseMenu();
+        anchor.KeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Escape) CloseMenu(); };
+
         anchor.Show();
-        Native.GetCursorPos(out var point);
-        Native.SetWindowPos(new WindowInteropHelper(anchor).Handle, new IntPtr(-1), point.X, point.Y, 1, 1, 0x0040);
         anchor.Activate();
+
         menu.PlacementTarget = anchor;
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
-        menu.Closed += (_, _) => anchor.Close();
+        menu.Closed += (_, _) => CloseMenu();
         menu.IsOpen = true;
     }
 
@@ -102,26 +124,28 @@ internal static class OpenMenu
             <Setter Property="Template">
               <Setter.Value>
                 <ControlTemplate TargetType="MenuItem">
-                  <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Margin="0,1" Padding="{TemplateBinding Padding}">
-                    <Grid>
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                      </Grid.ColumnDefinitions>
-                      <ContentPresenter ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-                      <Path x:Name="arrow" Grid.Column="1" Data="M 0,0 L 4,4 L 0,8" Stroke="{Muted}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center" Margin="16,0,2,0" Visibility="Collapsed"/>
-                      <p:Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Right" HorizontalOffset="2" VerticalOffset="-4" Focusable="False" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
-                        <Border FlowDirection="{TemplateBinding FlowDirection}" Background="{Surface}" BorderBrush="{Line}" BorderThickness="1" CornerRadius="8" Padding="4" Margin="6">
-                          <Border.Effect>
-                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.25" Color="#000000"/>
-                          </Border.Effect>
-                          <ScrollViewer MaxHeight="380" CanContentScroll="True" VerticalScrollBarVisibility="Auto">
-                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
-                          </ScrollViewer>
-                        </Border>
-                      </p:Popup>
-                    </Grid>
-                  </Border>
+                  <Grid>
+                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Margin="0,1" Padding="{TemplateBinding Padding}">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ContentPresenter ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                        <Path x:Name="arrow" Grid.Column="1" Data="M 0,0 L 4,4 L 0,8" Stroke="{Muted}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center" Margin="16,0,2,0" Visibility="Collapsed"/>
+                      </Grid>
+                    </Border>
+                    <p:Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Right" PlacementTarget="{Binding ElementName=border}" HorizontalOffset="0" VerticalOffset="-4" Focusable="False" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
+                      <Border FlowDirection="{TemplateBinding FlowDirection}" Background="{Surface}" BorderBrush="{Line}" BorderThickness="1" CornerRadius="8" Padding="4" Margin="4">
+                        <Border.Effect>
+                          <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.25" Color="#000000"/>
+                        </Border.Effect>
+                        <ScrollViewer MaxHeight="380" CanContentScroll="True" VerticalScrollBarVisibility="Auto">
+                          <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </ScrollViewer>
+                      </Border>
+                    </p:Popup>
+                  </Grid>
                   <ControlTemplate.Triggers>
                     <Trigger Property="HasItems" Value="True">
                       <Setter TargetName="arrow" Property="Visibility" Value="Visible"/>
