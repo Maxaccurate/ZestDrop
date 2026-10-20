@@ -12,6 +12,7 @@
     <Compile Include="../ZestDrop/AppIcon.cs" Link="AppIcon.cs"/>
     <Compile Include="../ZestDrop/Strings.cs" Link="Strings.cs"/>
     <Compile Include="../ZestDrop/StringsEn.cs" Link="StringsEn.cs"/>
+    <Compile Include="../ZestDrop/StringsAr.cs" Link="StringsAr.cs"/>
     <Compile Include="../ZestDrop/Settings.cs" Link="Settings.cs"/>
     <Compile Include="../ZestDrop/StartupManager.cs" Link="StartupManager.cs"/>
     <EmbeddedResource Include="../ZestDrop/assets/zestdrop.ico" LogicalName="ZestDrop.AppIcon"/>

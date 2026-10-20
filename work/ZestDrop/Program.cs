@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
@@ -320,7 +321,7 @@ internal sealed class Resident : IDisposable
     private readonly Channel<QueuedJob> queue = Channel.CreateBounded<QueuedJob>(new BoundedChannelOptions(16) { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
     private readonly CancellationTokenSource stopping = new();
     private readonly DragShortcutTracker dragShortcuts = new(Native.GetSystemMetrics(68), Native.GetSystemMetrics(69));
-    private bool f8, f9, escape, mouse, releasePending;
+    private bool f8, f9, escape, mouse, control, shift, tab, releasePending;
     private DateTime activated = DateTime.MinValue;
     private string? lastOutput;
     private bool disposed;
@@ -588,35 +589,71 @@ internal sealed class Resident : IDisposable
     private void Poll(object? sender, EventArgs e)
     {
         bool nextF8 = Native.Down(0x77), nextF9 = Native.Down(0x78), nextEscape = Native.Down(0x1B), nextMouse = Native.Down(1);
+        bool nextShift = Native.Down(0x10), nextControl = Native.Down(0x11), nextAlt = Native.Down(0x12), nextTab = Native.Down(0x09);
         Native.GetCursorPos(out var cursor);
-        var request = dragShortcuts.Update(nextMouse, Native.Down(0x10), Native.Down(0x11), Native.Down(0x12), cursor.X, cursor.Y, nextMouse && !mouse && Native.ShellFileWindow());
+        var request = dragShortcuts.Update(nextMouse, nextShift, nextControl, nextAlt, cursor.X, cursor.Y, nextMouse && !mouse && Native.ShellFileWindow());
         if (nextEscape && !escape)
             dragShortcuts.Cancel();
         else if (request != DragMenuRequest.None)
             Activate(request == DragMenuRequest.Tools, "DragModifier", true);
-        // F8/F9 are only observed while the mouse is held, never registered as global hotkeys,
-        // so other applications (Excel recalculation, debugger breakpoints) still receive them.
         if (nextF8 && !f8 && nextMouse)
             Activate(false, "DragFunctionKey", true);
         if (nextF9 && !f9 && nextMouse)
             Activate(true, "DragFunctionKey", true);
+
+        // When wheel is already visible (pinned or mouse held), allow switching between Formats and Tools mode using keyboard:
+        if (wheel.IsVisible)
+        {
+            if (nextControl && !control && !wheel.ToolsMode)
+                Activate(true, "KeyControl", false);
+            else if (nextShift && !shift && !nextControl && wheel.ToolsMode)
+                Activate(false, "KeyShift", false);
+            else if (nextTab && !tab)
+                Activate(!wheel.ToolsMode, "KeyTab", false);
+            else if (nextF8 && !f8 && wheel.ToolsMode)
+                Activate(false, "F8Key", false);
+            else if (nextF9 && !f9 && !wheel.ToolsMode)
+                Activate(true, "F9Key", false);
+        }
+
+        bool pinned = Settings.GetBool("pinWheel", false);
         if (nextEscape && !escape && wheel.IsVisible)
             wheel.Dismiss("Escape");
         if (wheel.IsVisible && mouse && !nextMouse && !releasePending)
         {
-            releasePending = true;
-            var instance = wheel.Instance;
-            // Let the OLE Drop callback finish before closing an uncommitted wheel.
-            var delay = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
-            delay.Tick += (_, _) => { delay.Stop(); if (wheel.IsVisible && wheel.Instance == instance) wheel.Dismiss("ReleasedOutside"); };
-            delay.Start();
+            if (!pinned)
+            {
+                releasePending = true;
+                var instance = wheel.Instance;
+                // Let the OLE Drop callback finish before closing an uncommitted wheel.
+                var delay = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+                delay.Tick += (_, _) => { delay.Stop(); if (wheel.IsVisible && wheel.Instance == instance) wheel.Dismiss("ReleasedOutside"); };
+                delay.Start();
+            }
         }
-        if (wheel.IsVisible && !nextMouse && (DateTime.UtcNow - activated).TotalSeconds > 10)
+        if (wheel.IsVisible && pinned)
+        {
+            if (Native.Down(2))
+                wheel.Dismiss("RightClick");
+            else if (nextMouse && !mouse)
+            {
+                var hwnd = new WindowInteropHelper(wheel).Handle;
+                if (hwnd != IntPtr.Zero && Native.GetWindowRect(hwnd, out var rect))
+                {
+                    if (cursor.X < rect.Left || cursor.X > rect.Right || cursor.Y < rect.Top || cursor.Y > rect.Bottom)
+                        wheel.Dismiss("ClickedOutside");
+                }
+            }
+        }
+        if (wheel.IsVisible && !nextMouse && (DateTime.UtcNow - activated).TotalSeconds > (pinned ? 60 : 10))
             wheel.Dismiss("IdleTimeout");
         f8 = nextF8;
         f9 = nextF9;
         escape = nextEscape;
         mouse = nextMouse;
+        control = nextControl;
+        shift = nextShift;
+        tab = nextTab;
     }
 
     private void Enqueue(ConversionJob job)

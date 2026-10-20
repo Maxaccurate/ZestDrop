@@ -82,7 +82,7 @@ internal sealed class DropWheel : Window
         Canvas.SetLeft(hubSide, Center - 56); Canvas.SetTop(hubSide, Center - 56 + 4);
         Canvas.SetZIndex(hubSide, 9); canvas.Children.Add(hubSide);
         center = new Border { Width = 112, Height = 112, CornerRadius = new CornerRadius(56), Background = Shade.Hub,
-            BorderBrush = Shade.HubEdge, BorderThickness = new Thickness(1) };
+            BorderBrush = Shade.HubEdge, BorderThickness = new Thickness(1), Cursor = System.Windows.Input.Cursors.Hand };
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         count.Text = L.T("拖入文件");
         count.TextAlignment = TextAlignment.Center;
@@ -108,6 +108,9 @@ internal sealed class DropWheel : Window
         PreviewDragOver += Over;
         PreviewDragLeave += (_, e) => { var p = e.GetPosition(this); if (p.X < 0 || p.Y < 0 || p.X > ActualWidth || p.Y > ActualHeight) { Highlight(first, -1); Highlight(second, -1); } e.Handled = true; };
         PreviewDrop += OnDrop;
+        PreviewMouseMove += OnPinnedMouseMove;
+        PreviewMouseLeftButtonDown += OnPinnedMouseDown;
+        PreviewMouseRightButtonDown += (_, _) => Dismiss("RightClick");
     }
 
     // Follows a theme change made since the wheel was last shown.
@@ -274,7 +277,13 @@ internal sealed class DropWheel : Window
                 selected = operations[index];
         }
         if (selected == null)
-        { e.Effects = DragDropEffects.None; e.Handled = true; Dismiss("InvalidDrop"); return; }
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            if (!Settings.GetBool("pinWheel", false))
+                Dismiss("InvalidDrop");
+            return;
+        }
         var files = paths.ToArray();
         e.Effects = DragDropEffects.Copy;
         e.Handled = true;
@@ -284,6 +293,73 @@ internal sealed class DropWheel : Window
         eligible = false;
         Journal.Write("DropAccepted", new { Action = selected.Id, count = files.Length, effect = "Copy" });
         Dispatcher.InvokeAsync(() => submit(files, selected));
+    }
+
+    private void OnPinnedMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (!IsVisible || !eligible || paths.Length == 0)
+            return;
+        var point = e.GetPosition(canvas);
+        int tool = openGroup >= 0 ? Hit(second, point, OuterRingInner, OuterRingOuter + 10) : -1;
+        int category = tool >= 0 ? -1 : Hit(first, point, Inner, Outer);
+        if (tool >= 0)
+        {
+            Highlight(second, tool);
+        }
+        else if (groups != null && category >= 0)
+        {
+            OpenGroup(category);
+            Highlight(second, -1);
+        }
+        else if (groups == null)
+        {
+            Highlight(first, category);
+        }
+        else
+        {
+            Highlight(second, -1);
+        }
+    }
+
+    private void OnPinnedMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (!IsVisible)
+            return;
+        if (!eligible || paths.Length == 0)
+        {
+            Dismiss("ClickedEmptyWheel");
+            return;
+        }
+        var point = e.GetPosition(canvas);
+        Operation? selected = null;
+        if (openGroup >= 0 && Hit(second, point, OuterRingInner, OuterRingOuter + 10) is var tool and >= 0)
+            selected = groups![openGroup].Items[tool];
+        else if (groups == null && Hit(first, point, Inner, Outer) is var index and >= 0)
+            selected = operations[index];
+
+        if (selected != null)
+        {
+            var files = paths.ToArray();
+            Hide();
+            paths = [];
+            entered = false;
+            eligible = false;
+            Journal.Write("ClickAccepted", new { Action = selected.Id, count = files.Length });
+            Dispatcher.InvokeAsync(() => submit(files, selected));
+            e.Handled = true;
+        }
+        else
+        {
+            double dist = (point - new Point(Center, Center)).Length;
+            if (dist <= Inner)
+            {
+                ChangeMode(!tools);
+                e.Handled = true;
+                return;
+            }
+            Dismiss("ClickedBlank");
+            e.Handled = true;
+        }
     }
 
     private static Point Polar(double radius, double angle) => new(Center + radius * Math.Cos(angle), Center + radius * Math.Sin(angle));
