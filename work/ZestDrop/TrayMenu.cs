@@ -75,11 +75,17 @@ internal sealed class TrayMenu : IDisposable
         wheel.DropDownItems.Add(new Forms.ToolStripSeparator());
         var merged = Item("合并相关工具", () => Settings.Set(Catalog.LayoutKey, "merged"));
         var twoWheels = Item("两层轮盘", () => Settings.Set(Catalog.LayoutKey, "twoWheels"));
-        wheel.DropDownItems.AddRange([merged, twoWheels]);
+        var pinWheel = Item("固定菜单（松手不关闭）", () =>
+        {
+            bool next = !Settings.GetBool("pinWheel", false);
+            Settings.Set("pinWheel", next);
+        });
+        wheel.DropDownItems.AddRange([merged, twoWheels, new Forms.ToolStripSeparator(), pinWheel]);
         wheel.DropDownOpening += (_, _) =>
         {
             merged.Checked = !Catalog.TwoWheels;
             twoWheels.Checked = Catalog.TwoWheels;
+            pinWheel.Checked = Settings.GetBool("pinWheel", false);
         };
         settings.DropDownItems.Add(wheel);
 
@@ -111,8 +117,8 @@ internal sealed class TrayMenu : IDisposable
         settings.DropDownItems.Add(appearance);
 
         // Language names remain recognizable regardless of the active translation.
-        var language = new TrayMenuItem("Language / 语言");
-        foreach (var (code, name) in new[] { ("zh", "简体中文"), ("en", "English") })
+        var language = new TrayMenuItem("Language / 语言 / اللغة");
+        foreach (var (code, name) in new[] { ("zh", "简体中文"), ("en", "English"), ("ar", "العربية") })
             language.DropDownItems.Add(new TrayMenuItem(name, null, (_, _) => L.Language = code) { Tag = code });
         language.DropDownOpening += (_, _) =>
         {
@@ -189,20 +195,25 @@ internal sealed class TrayMenu : IDisposable
             strip.ForeColor = renderer.Ink;
             float scale = strip.DeviceDpi / 96f;
             strip.Padding = new Forms.Padding((int)(7 * scale), (int)(7 * scale), (int)(7 * scale), (int)(7 * scale));
-            strip.RightToLeft = Forms.RightToLeft.No;
+            strip.RightToLeft = L.Arabic ? Forms.RightToLeft.Yes : Forms.RightToLeft.No;
             if (strip is Forms.ToolStripDropDownMenu drop)
             {
                 drop.ShowImageMargin = false;
                 drop.ShowCheckMargin = true;
             }
             // AutoSize only measures the visible text and otherwise clips the two-line header.
+            // Measure intrinsic text only. GetPreferredSize includes MinimumItemSize from the last
+            // refresh, so adding padding to it would make the menu grow every time it opens.
+            // Reserve 32px for checks, 26px for arrows, 14px for outer padding, and 4px breathing room.
             int width = Math.Max((int)((strip == Menu ? 240 : 200) * scale), strip.Items.Cast<Forms.ToolStripItem>()
                 .Where(item => item is Forms.ToolStripMenuItem and not TrayMenuHeader)
-                .Select(item => Forms.TextRenderer.MeasureText(item.Text, strip.Font).Width + (int)(54 * scale))
+                .Select(item => Forms.TextRenderer.MeasureText(item.Text, strip.Font,
+                    new Size(int.MaxValue, int.MaxValue), Forms.TextFormatFlags.NoPrefix).Width + (int)(76 * scale))
                 .DefaultIfEmpty(0).Max());
             strip.MinimumSize = new Size(width, 0);
             foreach (Forms.ToolStripItem item in strip.Items)
             {
+                item.RightToLeft = strip.RightToLeft;
                 item.ForeColor = renderer.Ink;
                 if (item is TrayMenuHeader)
                 {
@@ -314,9 +325,11 @@ internal sealed class TrayMenuRenderer(bool dark) : Forms.ToolStripProfessionalR
         // ToolStrip caches its text/arrow rectangles from the measured text width. Use the full row instead.
         float itemScale = e.Item.Owner?.DeviceDpi / 96f ?? 1;
         bool rightToLeft = e.Item.RightToLeft == Forms.RightToLeft.Yes;
-        int textInset = (int)((e.Item.Owner is Forms.ContextMenuStrip ? 14 : 28) * itemScale);
+        int checkInset = (int)(32 * itemScale);
         int arrowInset = (int)(26 * itemScale);
-        e.TextRectangle = new Rectangle(rightToLeft ? arrowInset : textInset, 0, e.Item.Width - textInset - arrowInset, e.Item.Height);
+        int textLeft = rightToLeft ? arrowInset : checkInset;
+        int rowTextWidth = Math.Max(0, e.Item.Width - checkInset - arrowInset);
+        e.TextRectangle = new Rectangle(textLeft, 0, rowTextWidth, e.Item.Height);
         e.TextFormat = Forms.TextFormatFlags.NoPrefix | Forms.TextFormatFlags.VerticalCenter |
             (rightToLeft ? Forms.TextFormatFlags.Right | Forms.TextFormatFlags.RightToLeft : Forms.TextFormatFlags.Left);
         base.OnRenderItemText(e);
@@ -348,7 +361,7 @@ internal sealed class TrayMenuRenderer(bool dark) : Forms.ToolStripProfessionalR
     protected override void OnRenderItemCheck(Forms.ToolStripItemImageRenderEventArgs e)
     {
         float scale = e.Item.Owner?.DeviceDpi / 96f ?? 1;
-        var center = new PointF(e.Item.RightToLeft == Forms.RightToLeft.Yes ? e.Item.Width - 14 * scale : 14 * scale, e.Item.Height / 2f);
+        var center = new PointF(e.Item.RightToLeft == Forms.RightToLeft.Yes ? e.Item.Width - 15 * scale : 15 * scale, e.Item.Height / 2f);
         using var pen = new Pen(ColorTranslator.FromHtml(dark ? "#F1A272" : "#D55418"), 1.7f * scale) { StartCap = LineCap.Round, EndCap = LineCap.Round };
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
         e.Graphics.DrawLines(pen, new PointF[] { new(center.X - 4 * scale, center.Y), new(center.X - scale, center.Y + 3 * scale), new(center.X + 5 * scale, center.Y - 4 * scale) });

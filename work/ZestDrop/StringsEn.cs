@@ -623,5 +623,8 @@ internal static partial class L
         ["轮盘"] = "Wheel",
         ["帮助"] = "Help",
         ["使用指南…"] = "Getting started…",
+        ["固定菜单（松手不关闭）"] = "Sticky menu (stay open on release)",
+        ["固定菜单（松开鼠标按键不关闭，点击选项或空白处关闭）"] = "Sticky menu (keeps the menu open when releasing the mouse button; click an option or outside to close)",
+        ["已切换为阿拉伯语"] = "Switched to Arabic",
     };
 }

@@ -30,7 +30,11 @@ internal sealed class WelcomeWindow : Window
         Rebuild();
     }
 
-    private void Rebuild() => Content = UiTheme.Frame(this, Body(), "ZestDrop");
+    private void Rebuild()
+    {
+        FlowDirection = L.Arabic ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        Content = UiTheme.Frame(this, Body(), "ZestDrop");
+    }
 
     private UIElement Body()
     {
@@ -61,6 +65,9 @@ internal sealed class WelcomeWindow : Window
         var hide = new CheckBox { Content = L.T("启动时不再显示此窗口"), IsChecked = Settings.GetBool(HideAtStartKey, false), Margin = new Thickness(0, 18, 0, 0), Foreground = UiTheme.Muted };
         hide.Click += (_, _) => Settings.Set(HideAtStartKey, hide.IsChecked == true);
         panel.Children.Add(hide);
+        var pinWheel = new CheckBox { Content = L.T("固定菜单（松手不关闭）"), IsChecked = Settings.GetBool("pinWheel", false), Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("固定菜单（松开鼠标按键不关闭，点击选项或空白处关闭）"), Foreground = UiTheme.Muted };
+        pinWheel.Click += (_, _) => Settings.Set("pinWheel", pinWheel.IsChecked == true);
+        panel.Children.Add(pinWheel);
         startup = new CheckBox { Content = L.T("开机自启"), IsEnabled = false, Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("登录 Windows 后在后台运行，不打开欢迎窗口。") };
         startupMessage = new TextBlock { Foreground = UiTheme.Muted, FontSize = 11, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(6, 3, 0, 0) };
         startupSettings = new Button { Content = L.T("Windows 启动应用设置"), Visibility = Visibility.Collapsed, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(6, 5, 0, 0) };
@@ -81,7 +88,7 @@ internal sealed class WelcomeWindow : Window
         footer.Children.Add(close);
         var languages = new StackPanel { Orientation = Orientation.Horizontal };
         // Language names are always shown in their own language so either one can be found.
-        foreach (var (code, name) in new[] { ("en", "English"), ("zh", "简体中文") })
+        foreach (var (code, name) in new[] { ("en", "English"), ("zh", "简体中文"), ("ar", "العربية") })
         {
             bool current = L.Language == code;
             var button = new Button { Content = name, Margin = new Thickness(0, 0, 8, 0), FontWeight = current ? FontWeights.SemiBold : FontWeights.Normal, BorderBrush = current ? UiTheme.Accent : UiTheme.Line };

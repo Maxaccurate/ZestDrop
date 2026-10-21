@@ -4,6 +4,7 @@
     <Compile Include="../ZestDrop/Models.cs" Link="Models.cs"/>
     <Compile Include="../ZestDrop/Strings.cs" Link="Strings.cs"/>
     <Compile Include="../ZestDrop/StringsEn.cs" Link="StringsEn.cs"/>
+    <Compile Include="../ZestDrop/StringsAr.cs" Link="StringsAr.cs"/>
     <Compile Include="../ZestDrop/ProgressReader.cs" Link="ProgressReader.cs"/>
     <Compile Include="../ZestDrop/Backend.cs" Link="Backend.cs"/>
     <Compile Include="../ZestDrop/ActivityIndicator.cs" Link="ActivityIndicator.cs"/>
