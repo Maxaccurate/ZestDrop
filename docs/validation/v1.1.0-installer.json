@@ -1,0 +1,108 @@
+{
+  "passed": 22,
+  "failed": 0,
+  "payload_files": 1942,
+  "checks": [
+    {
+      "name": "Refuses a nonempty unrelated installation folder",
+      "passed": true
+    },
+    {
+      "name": "Installs without administrator privileges into a Unicode path",
+      "passed": true
+    },
+    {
+      "name": "All installed payload files match the packaged manifest",
+      "passed": true
+    },
+    {
+      "name": "Registers version in per-user Installed apps",
+      "passed": true
+    },
+    {
+      "name": "Creates a Start menu shortcut",
+      "passed": true
+    },
+    {
+      "name": "Installation preserves existing startup and Explorer preferences",
+      "passed": true
+    },
+    {
+      "name": "Installed application executes convert:jpg",
+      "passed": true
+    },
+    {
+      "name": "Installed application executes convert:mp3",
+      "passed": true
+    },
+    {
+      "name": "Background fixture job is active",
+      "passed": true
+    },
+    {
+      "name": "Refuses uninstall while the installed app is processing",
+      "passed": true
+    },
+    {
+      "name": "Refuses upgrade while the installed app is processing",
+      "passed": true
+    },
+    {
+      "name": "Blocked upgrade and uninstall preserve the running job",
+      "passed": true
+    },
+    {
+      "name": "Same-version repair completes successfully",
+      "passed": true
+    },
+    {
+      "name": "Repair restores missing and modified files while preserving user-created files",
+      "passed": true
+    },
+    {
+      "name": "Uninstaller exits successfully",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes its files, shortcut and Installed apps entry",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes Python bytecode caches",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes only integrations pointing to this installation",
+      "passed": true
+    },
+    {
+      "name": "Uninstall preserves settings and user-created files",
+      "passed": true
+    },
+    {
+      "name": "Reinstalls cleanly after uninstall",
+      "passed": true
+    },
+    {
+      "name": "Uninstaller exits successfully",
+      "passed": true
+    },
+    {
+      "name": "A clean installation uninstalls without leaving application files",
+      "passed": true
+    }
+  ],
+  "same_files_as_zip": 1942,
+  "product_version": "1.1.0+c8811b485219ced8797bcee9d62699ad11b9b61b",
+  "installer_bytes": 151348721,
+  "sha256": "afcb13dfe32481f0c1db55eafb3fed68210f6a907f49e7a84e524d8d2d4bab2d",
+  "date": "2026-10-21",
+  "installer_compiler": "Inno Setup 7.1.0 x64",
+  "signed": false,
+  "scope": "Local Windows per-user silent installation, repair and uninstall; interactive wizard flow and other Windows releases were not manually validated.",
+  "packaging_sources": {
+    "packaging/ZestDrop.iss": "6c6f77705fac2ac4bf6b857c26031e6a3d0a24e13affbd0520602da57660a0ad",
+    "package-exe.ps1": "1b57d8313f3d424f1695f623b9006c6447ce19d57c6d083415c4141855167885",
+    "work/test-installer.py": "69cdb9f0139cfee1141a63a31345077b00dd36039b42a9081b7668d329eb84fb"
+  }
+}

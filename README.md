@@ -8,7 +8,13 @@ A Windows desktop file conversion utility that runs in the system tray. Drag fil
 
 ## Download
 
-Download the [v1.1.0 Windows x64 portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64.zip), extract the entire ZIP, and run `ZestDrop.exe` from the extracted `ZestDrop` folder. Keep `backend`, `runtime`, and the DLLs alongside the executable. No separate .NET or Python installation is required.
+Windows x64 v1.1.0 is available in three forms:
+
+- **[EXE installer](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64-setup.exe)** — installs for the current user, adds a Start menu shortcut and an uninstaller, and offers an optional desktop shortcut. No administrator rights are required.
+- **[7z portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64.7z)** — 147.8 MB, 40.37% smaller than the ZIP.
+- **[ZIP portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64.zip)** — 247.9 MB.
+
+All three include the complete offline runtimes; no separate .NET or Python installation is required. For portable downloads, extract the entire archive and run `ZestDrop.exe` from the extracted `ZestDrop` folder. Keep `backend`, `runtime`, and the DLLs alongside the executable. See [installation and packaging](docs/windows-installer.md) for install paths, upgrades and uninstall behavior.
 
 See the [release notes and checksum](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.0) for requirements and known limitations.
 
