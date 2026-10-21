@@ -202,11 +202,13 @@ internal sealed class TrayMenu : IDisposable
                 drop.ShowCheckMargin = true;
             }
             // AutoSize only measures the visible text and otherwise clips the two-line header.
+            // Measure intrinsic text only. GetPreferredSize includes MinimumItemSize from the last
+            // refresh, so adding padding to it would make the menu grow every time it opens.
+            // Reserve 32px for checks, 26px for arrows, 14px for outer padding, and 4px breathing room.
             int width = Math.Max((int)((strip == Menu ? 240 : 200) * scale), strip.Items.Cast<Forms.ToolStripItem>()
                 .Where(item => item is Forms.ToolStripMenuItem and not TrayMenuHeader)
-                .Select(item => Math.Max(
-                    Forms.TextRenderer.MeasureText(item.Text, strip.Font).Width + (int)((L.Arabic ? 76 : 58) * scale),
-                    item.GetPreferredSize(Size.Empty).Width + (int)(16 * scale)))
+                .Select(item => Forms.TextRenderer.MeasureText(item.Text, strip.Font,
+                    new Size(int.MaxValue, int.MaxValue), Forms.TextFormatFlags.NoPrefix).Width + (int)(76 * scale))
                 .DefaultIfEmpty(0).Max());
             strip.MinimumSize = new Size(width, 0);
             foreach (Forms.ToolStripItem item in strip.Items)
