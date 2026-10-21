@@ -1,0 +1,65 @@
+{
+  "release": "v1.1.0",
+  "date": "2026-10-21",
+  "platform": "Windows x64",
+  "passed": 467,
+  "failed": 0,
+  "suites": [
+    {
+      "suite": "tool_parameters",
+      "passed": 44,
+      "failed": 0
+    },
+    {
+      "suite": "progress_and_wheel",
+      "passed": 70,
+      "failed": 0
+    },
+    {
+      "suite": "ui_controls",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "backend_conversions_and_tools",
+      "passed": 238,
+      "failed": 0
+    },
+    {
+      "suite": "advanced_backend_branches",
+      "passed": 45,
+      "failed": 0
+    },
+    {
+      "suite": "application_dispatch",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "suite": "image_and_media_regressions",
+      "passed": 31,
+      "failed": 0
+    },
+    {
+      "suite": "backend_translations",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "suite": "backend_progress",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "suite": "location_and_pdf_redaction",
+      "passed": 8,
+      "failed": 0
+    }
+  ],
+  "fixtures": "Generated images, media, documents and archives; no private input files.",
+  "limitations": [
+    "Office automation was not re-tested.",
+    "Broad manual coverage across multiple monitors and display scaling remains outstanding.",
+    "Arabic backend messages and Arabic shaping in exported images are not included."
+  ]
+}

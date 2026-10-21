@@ -8,9 +8,9 @@ A Windows desktop file conversion utility that runs in the system tray. Drag fil
 
 ## Download
 
-Download the [v1.0.0 Windows x64 portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.0.0/ZestDrop-v1.0.0-windows-x64.zip), extract the entire ZIP, and run `ZestDrop.exe` from the extracted `ZestDrop` folder. Keep `backend`, `runtime`, and the DLLs alongside the executable. No separate .NET or Python installation is required.
+Download the [v1.1.0 Windows x64 portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64.zip), extract the entire ZIP, and run `ZestDrop.exe` from the extracted `ZestDrop` folder. Keep `backend`, `runtime`, and the DLLs alongside the executable. No separate .NET or Python installation is required.
 
-See the [release notes and checksum](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.0.0) for requirements and known limitations.
+See the [release notes and checksum](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.0) for requirements and known limitations.
 
 ## Screenshots
 
@@ -45,7 +45,9 @@ See the [release notes and checksum](https://github.com/Maxaccurate/ZestDrop/rel
 
 Once the menu appears, you can release the keyboard keys while continuing to hold the mouse button. Pressing Ctrl while Shift is held switches the conversion menu to tools. While dragging, **F8** (formats) and **F9** (tools) open the same menu, including for drags started in other apps. They are not registered as global hotkeys, so other applications still receive F8/F9 when you are not dragging. Shift and Ctrl+Shift activate for drags started on the desktop or in File Explorer.
 
-The interface is available in English and Simplified Chinese. It follows your Windows display language at first; change it any time from the tray icon menu (Language / 语言). The choice is saved in `%LOCALAPPDATA%\ZestDrop\settings.json`.
+The interface is available in English, Simplified Chinese and Arabic. It follows your Windows display language at first; change it any time from the tray icon menu (Settings → Language / 语言 / اللغة). The choice is saved in `%LOCALAPPDATA%\ZestDrop\settings.json`. The welcome window and tray menus support right-to-left layout in Arabic. Backend messages and Arabic text shaping inside exported images are not part of this UI translation update.
+
+**Sticky wheel** is an optional setting in the welcome window or **Settings → Wheel**. It keeps an uncommitted wheel open after releasing the mouse so you can hover and click an option. Releasing directly on a valid operation still executes it. While the wheel is open, **Ctrl** switches to tools, **Shift** returns to formats, **Tab** toggles, and **F8/F9** select formats/tools. Clicking the centre also switches modes. Right-click or press Esc to dismiss it.
 
 Background jobs appear as a stack of progress cards in the corner of the screen, oldest at the top. Each card has **Pause / Resume** (suspends the whole job, including FFmpeg, and continues exactly where it stopped), **Cancel** (stops the job and removes its unfinished files) and **Hide** (the job keeps running; show it again from the tray menu). With two or more jobs a header lets you **Collapse** the cards into one pile, **Expand** them again, or **Hide all**. Two jobs run at once; the rest wait their turn, and a paused job gives up its place.
 
@@ -130,6 +132,7 @@ After preparing the runtime and building the application, run backend checks wit
 ./outputs/ZestDrop/runtime/python/python.exe work/test-f9-refinements.py
 ./outputs/ZestDrop/runtime/python/python.exe work/test-progress.py
 ./outputs/ZestDrop/runtime/python/python.exe work/test-i18n.py
+./outputs/ZestDrop/runtime/python/python.exe work/test-location-redaction.py
 ```
 
 To also pause and resume a real FFmpeg conversion inside the C# checks, point them at the built application first:
