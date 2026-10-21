@@ -1,10 +1,10 @@
 # Windows EXE installer
 
-The EXE is a complete offline installer for the same Windows x64 application as the portable bundles. It includes .NET, Python and the conversion libraries, FFmpeg and 7-Zip. It does not download extra components or add an automatic updater.
+There are two EXE choices for the same Windows x64 application as the portable bundles. The **2.2 MB online installer** downloads and verifies the complete 151.3 MB offline installer and then opens its wizard. The **151.3 MB offline installer** includes .NET, Python and the conversion libraries, FFmpeg and 7-Zip. Both install the same application, which works offline afterward. Neither adds an automatic updater.
 
 ## Install and upgrade
 
-Download `ZestDrop-v1.1.0-windows-x64-setup.exe` from the [release](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.0). Run it and follow the wizard. The installer is unsigned, like the portable executable.
+Download `ZestDrop-v1.1.0-windows-x64-online-setup.exe` or the offline `ZestDrop-v1.1.0-windows-x64-setup.exe` from the [release](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.0). Run it and follow the wizard. The installers are unsigned, like the portable executable. The online version shows download progress and checks the downloaded file automatically; there are no separate checksum files to download. If the download fails, retry or use the offline installer. The initial online EXE is smaller, but total download traffic still includes the complete installation package.
 
 - Windows 10 version 1809 or later, with x64 application support.
 - Default directory: `%LOCALAPPDATA%\Programs\ZestDrop`.
@@ -39,7 +39,7 @@ Install [Inno Setup](https://jrsoftware.org/isdl.php) (tested with 7.1.0), and p
 
 The wrapper creates a fresh staging directory, excludes development sources/logs/bytecode, validates required runtimes, generates a SHA-256 payload manifest and targeted cache-cleanup rules, and compiles `packaging/ZestDrop.iss` using LZMA2 solid compression. Existing installer output is never overwritten. Keep the manifest with the build records. AppId is stable across versions and must not be changed for upgrades.
 
-The build outputs `ZestDrop-v<version>-windows-x64-setup.exe` and its `.exe.sha256` checksum. Test on a machine without a prior EXE installation using a fresh folder under this repository's `outputs` directory:
+The build outputs `ZestDrop-v<version>-windows-x64-setup.exe`. Integrity hashes remain in the developer build records; a checksum sidecar is only generated when explicitly passing `-ExportChecksum`. Public release assets do not include checksum sidecars. Test on a machine without a prior EXE installation using a fresh folder under this repository's `outputs` directory:
 
 ```powershell
 ./outputs/ZestDrop/runtime/python/python.exe ./work/test-installer.py `
@@ -51,3 +51,20 @@ The build outputs `ZestDrop-v<version>-windows-x64-setup.exe` and its `.exe.sha2
 The integration test installs silently in a Unicode path, verifies payload hashes and current-user registration, runs image/audio conversions, verifies upgrade/uninstall guards during a real image job, repairs modified/missing files, checks ownership-aware registry cleanup, uninstalls and reinstalls. It temporarily tests the app's startup and Explorer keys and restores their exact previous contents in `finally`; it refuses to overwrite an existing EXE installation or Start menu folder. UI-driven wizard interaction, other Windows versions and upgrade paths from future releases need separate validation.
 
 The v1.1.0 EXE is 151,348,721 bytes. All 22 lifecycle checks passed; see the [validation record](validation/v1.1.0-installer.json). Its 1,942 application payload files match the previously released ZIP, including the original v1.1.0 application build. The installer was added as a release asset without moving the version tag.
+
+## Build the online installer
+
+Build and validate the offline installer first, publish it with its versioned filename, and then run:
+
+```powershell
+./package-online-exe.ps1 `
+  -InstallerPath ./outputs/installers/ZestDrop-v1.1.0-windows-x64-setup.exe
+```
+
+The small bootstrapper embeds the version-specific GitHub URL and the exact offline installer's SHA-256. It downloads over HTTPS with progress and checks integrity before executing anything. It never accepts a runtime URL or checksum override. A missing, corrupt or changed release payload is not executed. Replacing the offline release asset requires rebuilding and republishing the online installer; otherwise use a new version. The bootstrapper only uses a temporary folder and does not add a second uninstall entry, shortcuts or application directory.
+
+Supported destination, language, silent-mode, shortcut task and restart switches are passed to the offline installer. Internal launch arguments and the outer log path are excluded. The child installer's exit status is propagated, including cancellation or failure. Download errors offer retry through the wizard or use of the offline installer; temporary downloads are cleaned up when the bootstrapper exits.
+
+`work/test-online-installer.py` builds small local HTTP fixtures for successful handoff, corrupted payload rejection, HTTP failure and child error propagation, then runs the actual release bootstrapper against GitHub, verifies installed files and image conversion, and uninstalls the test copy. Like the offline lifecycle test, it refuses to touch an existing EXE installation or Start menu folder.
+
+The v1.1.0 online EXE is 2,158,412 bytes. All 16 checks passed, including a real GitHub download/install/uninstall; see [online validation](validation/v1.1.0-online-installer.json). Interactive download cancellation and other Windows releases were not manually tested.

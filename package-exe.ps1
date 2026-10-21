@@ -2,7 +2,8 @@
 param(
     [string]$BundlePath = (Join-Path $PSScriptRoot 'outputs/ZestDrop'),
     [string]$CompilerPath,
-    [string]$OutputDirectory = (Join-Path $PSScriptRoot 'outputs/installers')
+    [string]$OutputDirectory = (Join-Path $PSScriptRoot 'outputs/installers'),
+    [switch]$ExportChecksum
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = $PSScriptRoot
@@ -81,6 +82,8 @@ $cleanup.Add('Type: dirifempty; Name: "{app}"')
     '/Qp' (Join-Path $repoRoot 'packaging/ZestDrop.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed.' }
 $digest = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
-[IO.File]::WriteAllText($installer + '.sha256', $digest + '  ' + [IO.Path]::GetFileName($installer) + "`n", [Text.Encoding]::ASCII)
+if ($ExportChecksum) {
+    [IO.File]::WriteAllText($installer + '.sha256', $digest + '  ' + [IO.Path]::GetFileName($installer) + "`n", [Text.Encoding]::ASCII)
+}
 Write-Output "Built: $installer"
 Write-Output "SHA-256: $digest"

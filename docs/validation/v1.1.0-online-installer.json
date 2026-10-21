@@ -1,0 +1,85 @@
+{
+  "passed": 16,
+  "failed": 0,
+  "payload_files": 1942,
+  "checks": [
+    {
+      "name": "Propagates child exit code 0",
+      "passed": true
+    },
+    {
+      "name": "Forwards Unicode destination, language, silent mode and task choice",
+      "passed": true
+    },
+    {
+      "name": "Keeps outer log parameters out of the child command line",
+      "passed": true
+    },
+    {
+      "name": "Rejects bad-hash before executing the downloaded file",
+      "passed": true
+    },
+    {
+      "name": "Rejects http-error before executing the downloaded file",
+      "passed": true
+    },
+    {
+      "name": "Propagates child exit code 9",
+      "passed": true
+    },
+    {
+      "name": "Bootstrap fixtures create no installed-app entry or Start menu folder",
+      "passed": true
+    },
+    {
+      "name": "Real GitHub download hands off to a successful per-user installation",
+      "passed": true
+    },
+    {
+      "name": "Downloaded offline installer passes the embedded integrity check",
+      "passed": true
+    },
+    {
+      "name": "Installs into the forwarded Unicode path",
+      "passed": true
+    },
+    {
+      "name": "All application files match the validated offline installer",
+      "passed": true
+    },
+    {
+      "name": "Only the real application is registered in Installed apps",
+      "passed": true
+    },
+    {
+      "name": "Online-installed application converts an image and preserves the original",
+      "passed": true
+    },
+    {
+      "name": "Online-installed application uninstalls successfully",
+      "passed": true
+    },
+    {
+      "name": "Online test leaves no application files or installed-app entry",
+      "passed": true
+    },
+    {
+      "name": "Preserves existing settings, startup and Explorer registrations",
+      "passed": true
+    }
+  ],
+  "version": "1.1.0",
+  "downloadUrl": "https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64-setup.exe",
+  "downloadBytes": 151348721,
+  "downloadSha256": "afcb13dfe32481f0c1db55eafb3fed68210f6a907f49e7a84e524d8d2d4bab2d",
+  "bootstrapBytes": 2158412,
+  "bootstrapSha256": "4169b50415ba035255270e40e988c6aaed8be788b23f79a7b724976b0bdec06b",
+  "date": "2026-10-21",
+  "compiler": "Inno Setup 7.1.0 x64",
+  "scope": "Silent-mode local HTTP fixtures and a real GitHub download/install/uninstall on this Windows machine; interactive wizard/cancel UI and other Windows releases were not manually validated.",
+  "packaging_sources": {
+    "packaging/ZestDrop-online.iss": "ab314f3dd92b6ef548e69ac85474db6cb58055c93958de669b7c8705bda2311b",
+    "package-online-exe.ps1": "8702a35011e1f4820f8577a3c1e5a8521cadd076065e6a1bd7abfb73bfa12d3b",
+    "work/test-online-installer.py": "c0cb98861b5e909d035fa3914d1b1e8ccfbb6433d0cbae79f6a6540f736771f9"
+  }
+}
