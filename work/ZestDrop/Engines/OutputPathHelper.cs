@@ -7,8 +7,21 @@ internal static class OutputPathHelper
 {
     public static string ResolveWorkDir(string inputPath, string? chosenOutputDir = null)
     {
-        if (!string.IsNullOrWhiteSpace(chosenOutputDir) && Directory.Exists(chosenOutputDir))
-            return Path.GetFullPath(chosenOutputDir);
+        if (!string.IsNullOrWhiteSpace(chosenOutputDir))
+        {
+            var full = Path.GetFullPath(chosenOutputDir);
+            if (Directory.Exists(full))
+                return full;
+            try
+            {
+                if (!Path.HasExtension(full) || chosenOutputDir.EndsWith(Path.DirectorySeparatorChar) || chosenOutputDir.EndsWith(Path.AltDirectorySeparatorChar))
+                {
+                    Directory.CreateDirectory(full);
+                    return full;
+                }
+            }
+            catch { }
+        }
         return Path.GetDirectoryName(Path.GetFullPath(inputPath))!;
     }
 

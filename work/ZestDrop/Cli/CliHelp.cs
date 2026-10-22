@@ -4,7 +4,7 @@ namespace ZestDrop.Cli;
 
 public static class CliHelp
 {
-    public const string Version = "1.0.0";
+    public const string Version = "1.1.1";
 
     public static string Text(string? command = null)
     {
@@ -19,7 +19,7 @@ public static class CliHelp
 
     private const string GeneralHelp = """
         ZestDrop - Drag. Drop. Convert. Desktop & CLI File Conversion Suite.
-        Version 1.0.0
+        Version 1.1.1
 
         USAGE:
           zestdrop <command> [arguments...] [options...]

@@ -87,7 +87,9 @@ public static class EbookEngine
 
             try
             {
-                var resolvedOutput = OutputPathHelper.Resolve(inputPath, toExt, outputPath);
+                var resolvedOutput = !string.IsNullOrEmpty(outputPath) && !Directory.Exists(outputPath)
+                    ? outputPath
+                    : OutputPathHelper.Resolve(inputPath, toExt, outputPath);
 
                 // Comic books
                 if (Comics.Contains(fromExt))

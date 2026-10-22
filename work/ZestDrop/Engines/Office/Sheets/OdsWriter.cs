@@ -184,6 +184,13 @@ internal static class OdsWriter
         if (styles.Cell(cell.Style, dataStyle) is { } styleName)
             sb.Append(CultureInfo.InvariantCulture, $" table:style-name=\"{styleName}\"");
 
+        if (!string.IsNullOrEmpty(cell.Formula))
+        {
+            var f = cell.Formula.Trim();
+            if (f.StartsWith("=")) f = f[1..];
+            sb.Append(CultureInfo.InvariantCulture, $" table:formula=\"of:={SecurityElement.Escape(f)}\"");
+        }
+
         if (cell.Text.Length == 0)
         {
             sb.Append("/>");

@@ -183,5 +183,8 @@ internal sealed record SheetCell(string Text, CellStyle Style, bool IsNumber = f
     /// <summary>A TRUE / FALSE cell (<see cref="Value"/> is 1 or 0).</summary>
     public bool IsBoolean { get; init; }
 
-    public bool HasContent => Text.Length > 0 || Style.Fill is not null || Style.HasBorders;
+    /// <summary>The cell's formula (e.g. "SUM(A1:A2)"); null if the cell has a literal value.</summary>
+    public string? Formula { get; init; }
+
+    public bool HasContent => Text.Length > 0 || Style.Fill is not null || Style.HasBorders || !string.IsNullOrEmpty(Formula);
 }

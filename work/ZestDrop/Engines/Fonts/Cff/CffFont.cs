@@ -155,13 +155,15 @@ internal sealed class CffFont
         then[1] * first[4] + then[3] * first[5] + then[5],
     ];
 
-    private static CffPrivate ReadPrivate(byte[] data, Dictionary<int, double[]> dict)
+    internal static CffPrivate ReadPrivate(byte[] data, Dictionary<int, double[]> dict)
     {
         if (!dict.TryGetValue(OpPrivate, out var entry) || entry.Length < 2)
             return new CffPrivate();
         var size = (int)entry[0];
+        if (size <= 0)
+            return new CffPrivate();
         var offset = Offset(entry[1], data);
-        if (size < 0 || size > data.Length - offset)
+        if (size > data.Length - offset)
             throw new InvalidDataException("The CFF private dictionary lies outside the table.");
         var priv = ParseDict(data.AsSpan(offset, size).ToArray());
         var subrs = Array.Empty<byte[]>();

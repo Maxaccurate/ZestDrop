@@ -117,8 +117,8 @@ public static class NativeEngines
         if (IsRasterImage(fromExt) && (targetExt is "pdf" or "ico"))
             return true;
 
-        // Native ZIP packaging
-        if (targetExt == "zip")
+        // Native ZIP packaging (loose files only; archive format conversion is routed to existing backend)
+        if (targetExt == "zip" && !Catalog.Archives.Contains(fromExt))
             return true;
 
         // Route Planner (multi-hop graph)
@@ -189,13 +189,13 @@ public static class NativeEngines
         // Docx & Document Engine
         foreach (var f in Documents.DocumentReaders.SupportedFormats)
             foreach (var t in new[] { "docx", "md", "txt", "html" })
-                if (!string.Equals(f, t, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(f, t, StringComparison.OrdinalIgnoreCase) && Documents.Docx.DocxEngine.CanConvert(f, t))
                     planner.Register(f, t, 2, (src, dst) => { Documents.Docx.DocxEngine.Convert(src, t, dst); return dst; });
 
         // Ebooks
         foreach (var f in Ebooks.EbookEngine.SupportedInputs)
             foreach (var t in Ebooks.EbookEngine.SupportedOutputs)
-                if (!string.Equals(f, t, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(f, t, StringComparison.OrdinalIgnoreCase) && Ebooks.EbookEngine.CanHandle(f, t))
                     planner.Register(f, t, 2, (src, dst) => { Ebooks.EbookEngine.Convert(src, t, dst); return dst; });
 
         // Image to PDF

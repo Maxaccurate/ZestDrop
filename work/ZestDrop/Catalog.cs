@@ -114,7 +114,7 @@ internal static class Catalog
         return Images.Contains(ext) ? "image" : Audio.Contains(ext) ? "audio" : Video.Contains(ext) || ext == "gif" ? "video" : OfficeSlides.Contains(ext) || OfficeWords.Contains(ext) || OfficeSheets.Contains(ext) ? "office" : Subtitles.Contains(ext) ? "subtitle" : new[] { "pdf", "txt", "md", "html" }.Contains(ext) ? "document" : Models3D.Contains(ext) ? "model3d" : CadFormats.Contains(ext) ? "cad" : Fonts.Contains(ext) ? "font" : DataTrees.Contains(ext) ? "data" : Ebooks.Contains(ext) ? "ebook" : Comics.Contains(ext) ? "comic" : Emails.Contains(ext) ? "email" : Archives.Contains(ext) ? "archive" : "file";
     }
     public static bool PackingOnly(string[] paths) => paths.Length > 0 && paths.All(path => Directory.Exists(path) || Category(path) == "file");
-    private static string[] Targets(string ext)
+    internal static string[] Targets(string ext)
     {
         if (OfficeSlides.Contains(ext))
             return OfficeBridge.Available("PowerPoint")
@@ -149,9 +149,9 @@ internal static class Catalog
         if (Ebooks.Contains(ext))
             return ((string[])["epub", "kepub", "txt", "html", "md", "fb2", "htmlz", "txtz", "docx"]).Where(t => t != ext).ToArray();
         if (ext == "md")
-            return ["docx", "epub", "kepub", "fb2", "htmlz", "txtz", "html", "txt", "pdf"];
+            return ["docx", "epub", "kepub", "fb2", "htmlz", "txtz", "html", "txt"];
         if (ext == "html")
-            return ["docx", "txt", "md", "epub", "fb2", "htmlz", "txtz", "pdf"];
+            return ["docx", "txt", "md", "epub", "fb2", "htmlz", "txtz"];
         return ext is "jpg" or "png" ? [.. ImageTargets, "docx"] : Images.Contains(ext) ? ImageTargets : Audio.Contains(ext) ? Audio : Video.Contains(ext) ? [.. Video, "gif", "mp3"] : ext == "gif" ? Video : ext == "pdf" ? ["docx", "jpg", "png", "txt"] : ext == "txt" ? ["pdf", "jpg", "png", "srt", "vtt", "epub", "fb2", "docx"] : Archives;
     }
     public static List<Operation> Options(string[] paths, bool tools)

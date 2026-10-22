@@ -65,7 +65,25 @@ public static class DocxEngine
                 var chapters = XhtmlWriter.Write(document, new XhtmlOptions
                 {
                     SplitChapters = false,
-                    ImageSource = _ => null
+                    ImageSource = imgPath =>
+                    {
+                        if (File.Exists(imgPath))
+                        {
+                            var bytes = File.ReadAllBytes(imgPath);
+                            var ext = Path.GetExtension(imgPath).TrimStart('.').ToLowerInvariant();
+                            var mime = ext switch
+                            {
+                                "png" => "image/png",
+                                "jpg" or "jpeg" => "image/jpeg",
+                                "gif" => "image/gif",
+                                "svg" => "image/svg+xml",
+                                "webp" => "image/webp",
+                                _ => "image/png"
+                            };
+                            return $"data:{mime};base64,{System.Convert.ToBase64String(bytes)}";
+                        }
+                        return null;
+                    }
                 });
                 var body = chapters.Count > 0 ? chapters[0].Body : "";
                 var html = XhtmlWriter.Page(document.Title ?? Path.GetFileNameWithoutExtension(inputPath), body, "en", null, false);

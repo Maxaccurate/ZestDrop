@@ -235,23 +235,24 @@ internal sealed class XlsxReader
         var (style, format) = Index(cell, "s", _cellFormats.Count) is { } s ? _cellFormats[s] : (CellStyle.Default, "General");
         var type = (string?)cell.Attribute("t");
         var raw = cell.Element(S + "v")?.Value;
+        var formula = cell.Element(S + "f")?.Value;
 
         switch (type)
         {
             case "s" when int.TryParse(raw, out var idx) && idx >= 0 && idx < _sharedStrings.Count:
-                return new SheetCell(_sharedStrings[idx], style);
+                return new SheetCell(_sharedStrings[idx], style) { Formula = formula };
 
             case "inlineStr" when cell.Element(S + "is") is { } inline:
-                return new SheetCell(RichText(inline), style);
+                return new SheetCell(RichText(inline), style) { Formula = formula };
 
             case "b":
-                return new SheetCell(raw is "1" or "true" ? "TRUE" : "FALSE", style) { Value = raw is "1" or "true" ? 1 : 0, IsBoolean = true };
+                return new SheetCell(raw is "1" or "true" ? "TRUE" : "FALSE", style) { Value = raw is "1" or "true" ? 1 : 0, IsBoolean = true, Formula = formula };
 
             case "e": // #N/A, #VALUE!, ...
-                return new SheetCell(raw ?? "", style);
+                return new SheetCell(raw ?? "", style) { Formula = formula };
 
             case "str": // cached string of a formula
-                return new SheetCell(raw ?? "", style);
+                return new SheetCell(raw ?? "", style) { Formula = formula };
 
             default:
                 if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
@@ -261,9 +262,10 @@ internal sealed class XlsxReader
                     {
                         Value = serial,
                         NumberFormat = NumberFormatter.IsGeneral(format) ? null : format,
+                        Formula = formula,
                     };
                 }
-                return new SheetCell(raw ?? "", style);
+                return new SheetCell(raw ?? "", style) { Formula = formula };
         }
     }
 }

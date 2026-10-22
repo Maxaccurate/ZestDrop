@@ -38,6 +38,7 @@ public sealed class CliOptions
                 var arg = args[i];
                 if (arg is "--json") opt.Json = true;
                 else if (arg is "--category" or "-c" && i + 1 < args.Length) opt.Category = args[++i];
+                else if (!arg.StartsWith('-') && opt.Category == null) opt.Category = arg;
             }
             return opt;
         }
@@ -48,8 +49,8 @@ public sealed class CliOptions
             for (int i = 1; i < args.Length; i++)
             {
                 var arg = args[i];
-                if (arg is "--to" or "-t" && i + 1 < args.Length) opt.TargetFormat = args[++i];
-                else if (arg is "--output" or "-o" && i + 1 < args.Length) opt.OutputFolder = args[++i];
+                if (arg is "--to" or "-t" or "--action" or "-a" && i + 1 < args.Length) opt.TargetFormat = args[++i];
+                else if (arg is "--output" or "-o" or "--out" && i + 1 < args.Length) opt.OutputFolder = args[++i];
                 else if (arg is "--subfolders" or "-s") opt.Subfolders = true;
                 else if (arg is "--move-originals" or "-m") opt.MoveOriginals = true;
                 else if (arg is "--quiet" or "-q") opt.Quiet = true;
@@ -67,8 +68,8 @@ public sealed class CliOptions
             for (int i = 1; i < args.Length; i++)
             {
                 var arg = args[i];
-                if (arg is "--to" or "-t" && i + 1 < args.Length) opt.TargetFormat = args[++i];
-                else if (arg is "--output" or "-o" && i + 1 < args.Length) opt.OutputFolder = args[++i];
+                if (arg is "--to" or "-t" or "--action" or "-a" && i + 1 < args.Length) opt.TargetFormat = args[++i];
+                else if (arg is "--output" or "-o" or "--out" && i + 1 < args.Length) opt.OutputFolder = args[++i];
                 else if (arg is "--recursive" or "-r") opt.Recursive = true;
                 else if (arg is "--json") opt.Json = true;
                 else if (arg is "--quiet" or "-q") opt.Quiet = true;

@@ -339,7 +339,8 @@ internal static class GltfFormat
                 b0["uri"] = uri;
         }
 
-        using var writer = new StreamWriter(output, new System.Text.UTF8Encoding(false), 1 << 16, leaveOpen: true);
-        node.WriteTo(new System.Text.Json.Utf8JsonWriter(writer.BaseStream, new System.Text.Json.JsonWriterOptions { Indented = true }));
+        using var jsonWriter = new System.Text.Json.Utf8JsonWriter(output, new System.Text.Json.JsonWriterOptions { Indented = true });
+        node.WriteTo(jsonWriter);
+        jsonWriter.Flush();
     }
 }

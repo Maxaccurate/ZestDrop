@@ -77,8 +77,13 @@ public static class CliRunner
 
         try
         {
+            if (!string.IsNullOrEmpty(options.OutputFolder))
+            {
+                Directory.CreateDirectory(Path.GetFullPath(options.OutputFolder));
+            }
+
             var parameters = !string.IsNullOrEmpty(options.OutputFolder)
-                ? new Dictionary<string, string> { ["_outputDir"] = options.OutputFolder }
+                ? new Dictionary<string, string> { ["_outputDir"] = Path.GetFullPath(options.OutputFolder) }
                 : null;
             var job = new ConversionJob(files.ToArray(), "convert:" + targetExt, parameters);
             await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(job), cancellationToken);
@@ -160,6 +165,7 @@ public static class CliRunner
         string outputFolder = !string.IsNullOrEmpty(options.OutputFolder)
             ? Path.GetFullPath(options.OutputFolder)
             : Path.Combine(folder, "converted");
+        string origDir = Path.Combine(folder, "originals");
 
         if (!options.Quiet)
         {
@@ -182,6 +188,9 @@ public static class CliRunner
 
         async Task ProcessFileAsync(string file)
         {
+            if (Directory.Exists(file) || IsDescendantOf(file, origDir) || IsDescendantOf(file, outputFolder))
+                return;
+
             lock (seen)
             {
                 if (!seen.Add(file)) return;
@@ -190,6 +199,7 @@ public static class CliRunner
             {
                 await Task.Delay(600, cancellationToken);
                 if (!File.Exists(file)) return;
+                if (IsDescendantOf(file, origDir) || IsDescendantOf(file, outputFolder)) return;
 
                 var fromExt = Path.GetExtension(file).TrimStart('.').ToLowerInvariant();
                 if (fromExt == targetExt) return;
@@ -252,7 +262,6 @@ public static class CliRunner
 
                 if (options.MoveOriginals)
                 {
-                    string origDir = Path.Combine(folder, "originals");
                     Directory.CreateDirectory(origDir);
                     string dest = Path.Combine(origDir, Path.GetFileName(file));
                     dest = Engines.OutputPathHelper.GetUniqueFilePath(dest);
@@ -273,8 +282,28 @@ public static class CliRunner
             }
         }
 
-        watcher.Created += (_, e) => _ = ProcessFileAsync(e.FullPath);
-        watcher.Renamed += (_, e) => _ = ProcessFileAsync(e.FullPath);
+        watcher.Created += (_, e) =>
+        {
+            if (!IsDescendantOf(e.FullPath, origDir) && !IsDescendantOf(e.FullPath, outputFolder))
+                _ = ProcessFileAsync(e.FullPath);
+        };
+        watcher.Renamed += (_, e) =>
+        {
+            if (!IsDescendantOf(e.FullPath, origDir) && !IsDescendantOf(e.FullPath, outputFolder))
+                _ = ProcessFileAsync(e.FullPath);
+        };
+
+        // Process any files already present in the watched directory
+        var searchOption = options.Subfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        try
+        {
+            foreach (var existingFile in Directory.GetFiles(folder, "*", searchOption))
+            {
+                if (!IsDescendantOf(existingFile, origDir) && !IsDescendantOf(existingFile, outputFolder))
+                    _ = ProcessFileAsync(existingFile);
+            }
+        }
+        catch { }
 
         try
         {
@@ -288,8 +317,14 @@ public static class CliRunner
             }
         }
 
-
         return Success;
+    }
+
+    internal static bool IsDescendantOf(string fullPath, string directoryPath)
+    {
+        var normalizedDir = Path.GetFullPath(directoryPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var normalizedPath = Path.GetFullPath(fullPath);
+        return normalizedPath.StartsWith(normalizedDir, StringComparison.OrdinalIgnoreCase);
     }
 
     private static int ListFormats(CliOptions options, TextWriter output)

@@ -455,11 +455,21 @@ internal sealed class OdsReader
                 break;
         }
 
+        var rawFormula = (string?)element.Attribute(Table + "formula");
+        string? formula = null;
+        if (!string.IsNullOrEmpty(rawFormula))
+        {
+            formula = rawFormula;
+            if (formula.StartsWith("of:=", StringComparison.OrdinalIgnoreCase)) formula = formula[4..];
+            else if (formula.StartsWith("oooc:=", StringComparison.OrdinalIgnoreCase)) formula = formula[6..];
+            else if (formula.StartsWith("=")) formula = formula[1..];
+        }
+
         var text = Paragraphs(element);
         if (type == "boolean")
-            return new SheetCell(text ?? (value == 1 ? "TRUE" : "FALSE"), style) { Value = value, IsBoolean = true };
+            return new SheetCell(text ?? (value == 1 ? "TRUE" : "FALSE"), style) { Value = value, IsBoolean = true, Formula = formula };
         if (value is not { } v)
-            return new SheetCell(text ?? (string?)element.Attribute(Office + "string-value") ?? "", style);
+            return new SheetCell(text ?? (string?)element.Attribute(Office + "string-value") ?? "", style) { Formula = formula };
 
         var format = FormatOf(dataStyle) ?? type switch
         {
@@ -470,7 +480,7 @@ internal sealed class OdsReader
         };
         format = NumberFormatter.IsGeneral(format) ? null : format;
         // text:p is what Calc showed when it saved; files written by other programs may leave it out.
-        return new SheetCell(text ?? _formatter.Format(v, format), style, IsNumber: true) { Value = v, NumberFormat = format };
+        return new SheetCell(text ?? _formatter.Format(v, format), style, IsNumber: true) { Value = v, NumberFormat = format, Formula = formula };
     }
 
     /// <summary>The text of a cell: its paragraphs joined by line breaks; null when it has none.</summary>

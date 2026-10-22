@@ -95,8 +95,7 @@ internal sealed class WatchFolders : IDisposable
         string originalsDir = Path.Combine(rule.Folder, "originals");
 
         // Ignore files inside output directory or originals directory
-        if (path.StartsWith(outputDir, StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith(originalsDir, StringComparison.OrdinalIgnoreCase))
+        if (IsDescendantOf(path, outputDir) || IsDescendantOf(path, originalsDir))
             return;
 
         if (Directory.Exists(path))
@@ -215,6 +214,13 @@ internal sealed class WatchFolders : IDisposable
                 ("packArchive", L.T("打包为 ZIP 压缩包"))
             ]
         };
+    }
+
+    internal static bool IsDescendantOf(string fullPath, string directoryPath)
+    {
+        var normalizedDir = Path.GetFullPath(directoryPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var normalizedPath = Path.GetFullPath(fullPath);
+        return normalizedPath.StartsWith(normalizedDir, StringComparison.OrdinalIgnoreCase);
     }
 
     public void Dispose()

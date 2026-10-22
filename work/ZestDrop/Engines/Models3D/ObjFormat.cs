@@ -128,7 +128,7 @@ internal static class ObjFormat
                             var ni = vn.HasValue ? RelativeIndex(vn.Value, nNorm) : -1;
                             corners[count++] = current.Add(vi, ti, ni);
                         }
-                        Triangulator.AddPolygon(current.Part, corners[..count]);
+                        current.AddPolygon(corners[..count]);
                         break;
                     }
                 case "o":
@@ -253,6 +253,7 @@ internal static class ObjFormat
 
         private readonly Dictionary<(int V, int Vt, int Vn), int> _corners = new();
         private readonly List<(int V, int Vt, int Vn)> _ordered = [];
+        private readonly List<int[]> _polygons = [];
 
         public int Add(int v, int vt, int vn)
         {
@@ -263,6 +264,11 @@ internal static class ObjFormat
             _corners.Add(key, index);
             _ordered.Add(key);
             return index;
+        }
+
+        public void AddPolygon(ReadOnlySpan<int> corners)
+        {
+            _polygons.Add(corners.ToArray());
         }
 
         public MeshPart Build(List<float> positions, List<float>? colors, List<float> uvs, List<float> normals)
@@ -320,6 +326,12 @@ internal static class ObjFormat
                     }
                 }
             }
+
+            foreach (var polygon in _polygons)
+            {
+                Triangulator.AddPolygon(Part, polygon);
+            }
+
             return Part;
         }
     }

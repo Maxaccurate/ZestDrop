@@ -131,7 +131,12 @@ internal static class XlsxWriter
         if (cell.IsBoolean && number is { } flag)
             sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"b\"><v>{(flag != 0 ? 1 : 0)}</v></c>");
         else if (number is { } value && double.IsFinite(value))
-            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s}><v>{value.ToString("R", CultureInfo.InvariantCulture)}</v></c>");
+        {
+            var f = !string.IsNullOrEmpty(cell.Formula) ? $"<f>{Escape(cell.Formula)}</f>" : "";
+            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s}>{f}<v>{value.ToString("R", CultureInfo.InvariantCulture)}</v></c>");
+        }
+        else if (!string.IsNullOrEmpty(cell.Formula))
+            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s}><f>{Escape(cell.Formula)}</f><v>{Escape(cell.Text)}</v></c>");
         else if (cell.Text.Length == 0)
             sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s}/>");
         else

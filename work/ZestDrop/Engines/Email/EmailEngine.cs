@@ -46,7 +46,9 @@ public static partial class EmailEngine
             var message = fromExt == "msg" ? OutlookMessage.Load(inputPath) : LoadEml(inputPath, cancellationToken);
             progress?.Report(0.5);
 
-            var resolvedOutput = OutputPathHelper.Resolve(inputPath, toExt, outputPath);
+            var resolvedOutput = !string.IsNullOrEmpty(outputPath) && !Directory.Exists(outputPath)
+                ? outputPath
+                : OutputPathHelper.Resolve(inputPath, toExt, outputPath);
 
             if (toExt == "eml")
             {
