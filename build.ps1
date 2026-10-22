@@ -12,6 +12,10 @@ if (-not $SkipRuntimeCheck) {
     }
 }
 
+# A running copy locks its files, so the build would stop halfway.
+$taskExe = [IO.Path]::GetFullPath((Join-Path $taskOutput 'ZestDrop.exe'))
+if (Get-Process ZestDrop -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $taskExe }) { throw "Quit ZestDrop ($taskExe) before building." }
+
 # Publish into a new empty folder. Publishing straight into outputs/ZestDrop skips files whose old copy is
 # newer, which once left .NET 8 framework files beside a .NET 10 build.
 $taskOutputs = [IO.Path]::GetFullPath((Join-Path $taskRoot 'outputs'))
@@ -19,8 +23,8 @@ $taskPublish = Join-Path $taskOutputs ('publish-' + [Guid]::NewGuid().ToString('
 dotnet publish (Join-Path $taskRoot 'work/ZestDrop/ZestDrop.csproj') -c Release -r win-x64 --self-contained true -o $taskPublish --nologo "-p:Store=$($Store.IsPresent)"
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
 New-Item -ItemType Directory -Force -Path $taskOutput | Out-Null
-# /IS /IT: overwrite every file, whatever its date.
-robocopy $taskPublish $taskOutput /E /IS /IT /NFL /NDL /NJH /NJS /NP | Out-Null
+# /IS /IT: overwrite every file, whatever its date. /R:2 /W:1: fail quickly on a locked file instead of retrying for days.
+robocopy $taskPublish $taskOutput /E /IS /IT /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "Copying the published app failed (robocopy exit $LASTEXITCODE)." }
 # Remove application files from earlier builds that this build no longer has (for example the Windows SDK
 # after a Store build). Only single files are removed; backend, runtime and the files added below are kept.
@@ -50,3 +54,5 @@ if (Test-Path -LiteralPath $taskPython) {
     if ($LASTEXITCODE -ne 0) { throw 'Generating third-party notices failed.' }
 } elseif (-not $SkipRuntimeCheck) { throw 'Missing runtime/python; cannot generate third-party notices.' }
 Write-Output "Built: $taskOutput/ZestDrop.exe"
+# robocopy reports copied files with exit code 1; report success to callers such as CI.
+exit 0
