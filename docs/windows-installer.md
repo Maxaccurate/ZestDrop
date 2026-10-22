@@ -67,4 +67,4 @@ Supported destination, language, silent-mode, shortcut task and restart switches
 
 `work/test-online-installer.py` builds small local HTTP fixtures for successful handoff, corrupted payload rejection, HTTP failure and child error propagation, then runs the actual release bootstrapper against GitHub, verifies installed files and image conversion, and uninstalls the test copy. Like the offline lifecycle test, it refuses to touch an existing EXE installation or Start menu folder.
 
-The v1.1.0 online EXE is 2,158,412 bytes. All 16 checks passed, including a real GitHub download/install/uninstall; see [online validation](validation/v1.1.0-online-installer.json). Interactive download cancellation and other Windows releases were not manually tested.
+The v1.1.1 online EXE is 2,158,431 bytes. All 16 checks passed, including a real GitHub download/install/uninstall; see [online validation](validation/v1.1.1-online-installer.json). Interactive download cancellation and other Windows releases were not manually tested.
