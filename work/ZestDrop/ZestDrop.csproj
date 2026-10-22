@@ -4,26 +4,27 @@
     <AssemblyName>ZestDrop</AssemblyName>
     <RootNamespace>ZestDrop</RootNamespace>
     <Product>ZestDrop</Product>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
     <Title>ZestDrop</Title>
     <Description>Drag. Drop. Convert. Desktop file tools for Windows.</Description>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>assets/zestdrop.ico</ApplicationIcon>
-    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+    <!-- WFAC010/WFO0003: WPF reads its DPI awareness from app.manifest, so the manifest keeps those settings. -->
+    <NoWarn>$(NoWarn);WFAC010;WFO0003</NoWarn>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <!-- The app has its own English and Chinese text; the other languages only add .NET framework strings for dialogs it never shows. -->
     <SatelliteResourceLanguages>en;zh-Hans</SatelliteResourceLanguages>
   </PropertyGroup>
   <!-- Only the Microsoft Store package needs the Windows SDK (for its startup task); it adds about 25 MB. -->
   <PropertyGroup Condition="'$(Store)' == 'true'">
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <DefineConstants>$(DefineConstants);PACKAGED_STARTUP</DefineConstants>
   </PropertyGroup>

@@ -107,7 +107,7 @@ PDF 转 Word 的版式可能变化；扫描页可作为图片写入 Word。PDF �
 
 ## 运行与源码
 
-完整解压后运行 ZestDrop.exe，保留同目录的 backend、runtime 和所有 DLL。已随包提供 .NET 8 桌面运行时、Python、FFmpeg、7-Zip 和所需 Python 库，无须另装这些依赖。
+完整解压后运行 ZestDrop.exe，保留同目录的 backend、runtime 和所有 DLL。已随包提供 .NET 10 桌面运行时、Python、FFmpeg、7-Zip 和所需 Python 库，无须另装这些依赖。
 
 源码和测试报告见 GitHub 仓库。运行日志和临时预览文件保存在 %LOCALAPPDATA%\ZestDrop\logs，日志超过 4 MB 自动轮换，不记录处理文件的完整路径，也不包含在发布压缩包中。
 

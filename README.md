@@ -76,7 +76,7 @@ See the [usage guide](docs/usage.md) (Chinese) for the full feature list and lim
 
 ## Build from source
 
-Requires Windows x64 and the .NET 8 SDK. Preparing the portable runtime also requires Python 3.13 with pip and a 64-bit 7-Zip installation in its default location, or a directory supplied explicitly.
+Requires Windows x64 and the .NET 10 SDK. Preparing the portable runtime also requires Python 3.13 with pip and a 64-bit 7-Zip installation in its default location, or a directory supplied explicitly.
 
 ```powershell
 # Download portable Python and FFmpeg, install pinned packages, and copy 7-Zip

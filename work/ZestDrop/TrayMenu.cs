@@ -249,6 +249,7 @@ internal sealed class TrayMenu : IDisposable
 
 internal class TrayMenuItem : Forms.ToolStripMenuItem
 {
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public Size MinimumItemSize { get; set; }
     public TrayMenuItem(string text, Image? image = null, EventHandler? click = null) : base(text, image, click) { }
     public override Size GetPreferredSize(Size constrainingSize)
