@@ -9,9 +9,7 @@
     <FileVersion>1.1.0.0</FileVersion>
     <Title>ZestDrop</Title>
     <Description>Drag. Drop. Convert. Desktop file tools for Windows.</Description>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <DefineConstants>$(DefineConstants);PACKAGED_STARTUP</DefineConstants>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
@@ -22,6 +20,12 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <!-- The app has its own English and Chinese text; the other languages only add .NET framework strings for dialogs it never shows. -->
     <SatelliteResourceLanguages>en;zh-Hans</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <!-- Only the Microsoft Store package needs the Windows SDK (for its startup task); it adds about 25 MB. -->
+  <PropertyGroup Condition="'$(Store)' == 'true'">
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <DefineConstants>$(DefineConstants);PACKAGED_STARTUP</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets/zestdrop.ico" LogicalName="ZestDrop.AppIcon" />

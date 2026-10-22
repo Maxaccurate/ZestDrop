@@ -1,6 +1,6 @@
 # Build the Microsoft Store package (.msix) from the app bundle.
 #   ./package-msix.ps1                  build the app, then package it
-#   ./package-msix.ps1 -SkipBuild       package the existing outputs/ZestDrop
+#   ./package-msix.ps1 -SkipBuild       package the existing outputs/ZestDrop (built with build.ps1 -Store)
 # Upload outputs/msix/ZestDrop_<version>_x64.msix in Partner Center; the Store signs it.
 param([switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
@@ -29,10 +29,11 @@ if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Project version '$version' mu
 $packageVersion = "$version.0"
 
 if (-not $SkipBuild) {
-    & (Join-Path $root 'build.ps1')
+    & (Join-Path $root 'build.ps1') -Store
     if ($LASTEXITCODE) { throw 'build.ps1 failed.' }
 }
 if (-not (Test-Path -LiteralPath (Join-Path $app 'ZestDrop.exe'))) { throw "No app bundle at $app. Run build.ps1 first." }
+if (-not (Test-Path -LiteralPath (Join-Path $app 'Microsoft.Windows.SDK.NET.dll'))) { throw 'The app bundle was not built for the Store. Run build.ps1 -Store first.' }
 
 $sdk = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Directory -ErrorAction SilentlyContinue |
     Where-Object { Test-Path (Join-Path $_.FullName 'x64\makeappx.exe') } | Sort-Object { [version]$_.Name } | Select-Object -Last 1
