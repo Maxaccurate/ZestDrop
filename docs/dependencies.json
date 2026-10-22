@@ -1,6 +1,6 @@
 {
   "release_date": "2026-10-04",
-  "dotnet_runtime": "8.0.31 self-contained",
+  "dotnet_runtime": "10.0.13 self-contained",
   "python": "3.13.16 embedded",
   "ffmpeg": "ffmpeg version 9.0.2-essentials_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
   "python_packages": [

@@ -4,7 +4,7 @@ There are two EXE choices for the same Windows x64 application as the portable b
 
 ## Install and upgrade
 
-Download `ZestDrop-v1.1.0-windows-x64-online-setup.exe` or the offline `ZestDrop-v1.1.0-windows-x64-setup.exe` from the [release](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.0). Run it and follow the wizard. The installers are unsigned, like the portable executable. The online version shows download progress and checks the downloaded file automatically; there are no separate checksum files to download. If the download fails, retry or use the offline installer. The initial online EXE is smaller, but total download traffic still includes the complete installation package.
+Download `ZestDrop-v1.1.1-windows-x64-online-setup.exe` or the offline `ZestDrop-v1.1.1-windows-x64-setup.exe` from the [release](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.1). Run it and follow the wizard. The installers are unsigned, like the portable executable. The online version shows download progress and checks the downloaded file automatically; there are no separate checksum files to download. If the download fails, retry or use the offline installer. The initial online EXE is smaller, but total download traffic still includes the complete installation package.
 
 - Windows 10 version 1809 or later, with x64 application support.
 - Default directory: `%LOCALAPPDATA%\Programs\ZestDrop`.
@@ -32,7 +32,7 @@ Install [Inno Setup](https://jrsoftware.org/isdl.php) (tested with 7.1.0), and p
 ./package-exe.ps1
 
 # Package a previously validated release without rebuilding its application:
-./package-exe.ps1 -BundlePath ./outputs/releases/v1.1.0/stage/ZestDrop `
+./package-exe.ps1 -BundlePath ./outputs/releases/v1.1.1/stage/ZestDrop `
   -CompilerPath 'C:/Program Files/Inno Setup 7/ISCC.exe' `
   -OutputDirectory ./outputs/installers
 ```
@@ -43,14 +43,14 @@ The build outputs `ZestDrop-v<version>-windows-x64-setup.exe`. Integrity hashes 
 
 ```powershell
 ./outputs/ZestDrop/runtime/python/python.exe ./work/test-installer.py `
-  ./outputs/installers/ZestDrop-v1.1.0-windows-x64-setup.exe `
+  ./outputs/installers/ZestDrop-v1.1.1-windows-x64-setup.exe `
   ./outputs/installers/installer-payload.json `
   ./outputs/installer-test
 ```
 
 The integration test installs silently in a Unicode path, verifies payload hashes and current-user registration, runs image/audio conversions, verifies upgrade/uninstall guards during a real image job, repairs modified/missing files, checks ownership-aware registry cleanup, uninstalls and reinstalls. It temporarily tests the app's startup and Explorer keys and restores their exact previous contents in `finally`; it refuses to overwrite an existing EXE installation or Start menu folder. UI-driven wizard interaction, other Windows versions and upgrade paths from future releases need separate validation.
 
-The v1.1.0 EXE is 151,348,721 bytes. All 22 lifecycle checks passed; see the [validation record](validation/v1.1.0-installer.json). Its 1,942 application payload files match the previously released ZIP, including the original v1.1.0 application build. The installer was added as a release asset without moving the version tag.
+The v1.1.1 EXE is 150,043,068 bytes and installs 1,945 application files. All 22 lifecycle checks passed; see the [validation record](validation/v1.1.1-installer.json).
 
 ## Build the online installer
 
@@ -58,7 +58,7 @@ Build and validate the offline installer first, publish it with its versioned fi
 
 ```powershell
 ./package-online-exe.ps1 `
-  -InstallerPath ./outputs/installers/ZestDrop-v1.1.0-windows-x64-setup.exe
+  -InstallerPath ./outputs/installers/ZestDrop-v1.1.1-windows-x64-setup.exe
 ```
 
 The small bootstrapper embeds the version-specific GitHub URL and the exact offline installer's SHA-256. It downloads over HTTPS with progress and checks integrity before executing anything. It never accepts a runtime URL or checksum override. A missing, corrupt or changed release payload is not executed. Replacing the offline release asset requires rebuilding and republishing the online installer; otherwise use a new version. The bootstrapper only uses a temporary folder and does not add a second uninstall entry, shortcuts or application directory.

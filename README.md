@@ -8,16 +8,16 @@ A Windows desktop file conversion utility that runs in the system tray. Drag fil
 
 ## Download
 
-Choose a Windows x64 v1.1.0 download:
+Choose a Windows x64 v1.1.1 download:
 
-- **[Online installer](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64-online-setup.exe)** — **2.2 MB** to start. Downloads and automatically verifies the complete 151.3 MB installation package, then opens the installation wizard. Requires internet during setup.
-- **[Offline installer](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64-setup.exe)** — **151.3 MB**, ready to install without internet. Both installers add a Start menu shortcut and an uninstaller, and offer an optional desktop shortcut. No administrator rights are required.
-- **[7z portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64.7z)** — 147.8 MB, 40.37% smaller than the ZIP.
-- **[ZIP portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.0/ZestDrop-v1.1.0-windows-x64.zip)** — 247.9 MB.
+- **[Online installer](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64-online-setup.exe)** — **2.2 MB** to start. Downloads and automatically verifies the complete 150.0 MB installation package, then opens the installation wizard. Requires internet during setup.
+- **[Offline installer](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64-setup.exe)** — **150.0 MB**, ready to install without internet. Both installers add a Start menu shortcut and an uninstaller, and offer an optional desktop shortcut. No administrator rights are required.
+- **[7z portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64.7z)** — 148.0 MB, 38.85% smaller than the ZIP.
+- **[ZIP portable bundle](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64.zip)** — 242.1 MB.
 
 All options provide the same complete application; no separate .NET or Python installation is required. The online installer downloads the full offline installer, so it reduces the initial download size rather than the total download. For portable downloads, extract the entire archive and run `ZestDrop.exe` from the extracted `ZestDrop` folder. Keep `backend`, `runtime`, and the DLLs alongside the executable. See [installation and packaging](docs/windows-installer.md) for install paths, upgrades and uninstall behavior.
 
-See the [release notes](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.0) for requirements and known limitations.
+See the [release notes](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.1) for requirements and known limitations.
 
 ## Screenshots
 
