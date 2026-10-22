@@ -17,6 +17,8 @@ namespace ZestDrop;
 // category's tools, and the drop happens on one of those.
 internal sealed class DropWheel : Window
 {
+    // Sticky wheel: stays open after the mouse button is released, until an option or the outside is clicked.
+    public const string PinnedKey = "pinWheel";
     private sealed class Ring
     {
         public readonly List<ShapePath> Petals = [], Sidewalls = [];
@@ -280,7 +282,7 @@ internal sealed class DropWheel : Window
         {
             e.Effects = DragDropEffects.None;
             e.Handled = true;
-            if (!Settings.GetBool("pinWheel", false))
+            if (!Settings.GetBool(PinnedKey, false))
                 Dismiss("InvalidDrop");
             return;
         }

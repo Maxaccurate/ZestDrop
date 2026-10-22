@@ -1,6 +1,5 @@
 from pathlib import Path
 import json,re,tempfile
-from PIL import Image
 from common import *
 
 SCRIPT=Path(__file__).with_name('ocr.ps1')

@@ -77,15 +77,15 @@ internal sealed class TrayMenu : IDisposable
         var twoWheels = Item("两层轮盘", () => Settings.Set(Catalog.LayoutKey, "twoWheels"));
         var pinWheel = Item("固定菜单（松手不关闭）", () =>
         {
-            bool next = !Settings.GetBool("pinWheel", false);
-            Settings.Set("pinWheel", next);
+            bool next = !Settings.GetBool(DropWheel.PinnedKey, false);
+            Settings.Set(DropWheel.PinnedKey, next);
         });
         wheel.DropDownItems.AddRange([merged, twoWheels, new Forms.ToolStripSeparator(), pinWheel]);
         wheel.DropDownOpening += (_, _) =>
         {
             merged.Checked = !Catalog.TwoWheels;
             twoWheels.Checked = Catalog.TwoWheels;
-            pinWheel.Checked = Settings.GetBool("pinWheel", false);
+            pinWheel.Checked = Settings.GetBool(DropWheel.PinnedKey, false);
         };
         settings.DropDownItems.Add(wheel);
 

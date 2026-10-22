@@ -20,7 +20,7 @@ def video_to_gif(path,params):
     return state['output']
 
 def video_settings(path,params):
-    info=probe(path); fmt=container(path); height=params.get('height','original'); fps=number(params,'fps',0); vf=[]
+    fmt=container(path); height=params.get('height','original'); fps=number(params,'fps',0); vf=[]
     if height not in ('original','') and int(height)>0: vf.append(f'scale=-2:{int(height)}:flags=lanczos')
     if fps<0 or fps>240: raise ValueError(T('帧率需在 0 到 240 之间'))
     if fps: vf.append(f'fps={fps:g}')
@@ -112,7 +112,7 @@ def audio_effects(path,params):
     return state['output']
 
 def join_audio(paths,params):
-    infos=[probe(path) for path in paths]; first=Path(paths[0]).suffix.lstrip('.').lower(); fmt='aiff' if first=='aif' else first
+    first=Path(paths[0]).suffix.lstrip('.').lower(); fmt='aiff' if first=='aif' else first
     fmt=fmt if fmt in media.AUDIO_CODECS else 'mp3'; args=[]; graph=[]
     for index,path in enumerate(paths):
         args+=['-i',path]; graph.append(f'[{index}:a:0]aformat=sample_rates=48000:channel_layouts=stereo[a{index}]')

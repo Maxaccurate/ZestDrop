@@ -50,19 +50,16 @@ internal static partial class L
         // Engine and process errors
         ["无法启动本地处理引擎"] = "Could not start the local processing engine",
         ["本地引擎未完成处理"] = "The local engine did not finish",
-        ["无法启动本地处理进程"] = "Could not start the local processing process",
         ["处理引擎未正常完成"] = "The processing engine did not finish normally",
         ["无法暂停处理进程"] = "Could not pause the processing job",
         ["无法暂停"] = "Could not pause",
 
         // Tray and notifications
         ["ZestDrop · 拖文件 + Shift 转换 / Ctrl+Shift 工具"] = "ZestDrop · Drag + Shift to convert / Ctrl+Shift for tools",
-        ["使用方式：拖文件 + Shift / Ctrl+Shift"] = "How to use: drag a file + Shift / Ctrl+Shift",
         ["显示处理进度"] = "Show progress",
         ["暂停全部任务"] = "Pause all jobs",
         ["继续全部任务"] = "Resume all jobs",
         ["取消全部任务"] = "Cancel all jobs",
-        ["最近输出所在文件夹"] = "Open latest output folder",
         ["第三方组件许可"] = "Third-party notices",
         ["退出 ZestDrop"] = "Quit ZestDrop",
         ["开机自启"] = "Start with Windows",
@@ -72,7 +69,6 @@ internal static partial class L
         ["开机自启由 Windows 系统策略管理。"] = "Startup is managed by Windows policy.",
         ["无法读取开机自启设置："] = "Could not read startup settings: ",
         ["无法更改开机自启设置："] = "Could not change startup settings: ",
-        ["语言"] = "Language",
         ["已切换为简体中文"] = "Switched to English",
         ["ZestDrop 已运行"] = "ZestDrop is running",
         ["拖文件 + Shift：转换；Ctrl+Shift：工具。拖拽时也可按 F8/F9。"] = "Drag a file + Shift: convert. Ctrl+Shift: tools. F8/F9 also work while dragging.",
@@ -102,7 +98,6 @@ internal static partial class L
         ["知道了"] = "Got it",
 
         // Debug previews
-        ["ZestDrop 播放器检查"] = "ZestDrop player check",
         ["假期视频.mp4"] = "holiday-video.mp4",
         ["照片 1.heic"] = "photo 1.heic",
         ["照片 2.heic"] = "photo 2.heic",
@@ -227,7 +222,6 @@ internal static partial class L
         ["剪贴板里没有图片或文件"] = "No picture or files on the clipboard",
         ["压缩（沿用上次的设置）"] = "Compress (with the settings used last)",
         ["图片"] = "Pictures",
-        ["处理剪贴板里的图片或文件…"] = "Process a picture or files from the clipboard…",
         ["无法读取剪贴板"] = "Cannot read the clipboard",
         ["最近输出"] = "Recent results",
         ["添加"] = "Add",
@@ -366,7 +360,6 @@ internal static partial class L
         ["自动裁剪，去除空白边角"] = "Auto-crop empty corners",
         ["空白处颜色（留空为白色）"] = "Empty corners (blank means white)",
         ["保持原尺寸（允许空白角）"] = "Keep original size (allow empty corners)",
-        ["保持原尺寸（裁掉四角）"] = "Keep the original size (corners are cut off)",
         ["空白处颜色"] = "Fill colour for the empty corners",
         ["空白处颜色（留空为透明）"] = "Fill colour for the empty corners (empty = transparent)",
         ["翻转"] = "Flip",
@@ -523,7 +516,6 @@ internal static partial class L
         ["关闭"] = "Close",
         ["ZestDrop  /  工具"] = "ZestDrop  /  Tools",
         ["处理中。请先点击取消，等待任务停止后关闭窗口。"] = "Still processing. Click Cancel and wait for the job to stop before closing the window.",
-        ["已选 1 个文件"] = "1 file selected",
         ["已选 {0} 个文件"] = "{0} files selected",
         ["效果预览"] = "Preview",
         ["源文件预览"] = "Source preview",
@@ -625,6 +617,6 @@ internal static partial class L
         ["使用指南…"] = "Getting started…",
         ["固定菜单（松手不关闭）"] = "Sticky menu (stay open on release)",
         ["固定菜单（松开鼠标按键不关闭，点击选项或空白处关闭）"] = "Sticky menu (keeps the menu open when releasing the mouse button; click an option or outside to close)",
-        ["已切换为阿拉伯语"] = "Switched to Arabic",
+        ["拖动刻度 · 按住 Shift 微调 · 双击归零"] = "Drag the ruler · Shift for fine control · Double-click to reset",
     };
 }

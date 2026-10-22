@@ -9,9 +9,18 @@ namespace ZestDrop;
 internal static class Settings
 {
     // Tests point this at a temporary file so they never touch the user's real settings.
-    public static string? PathOverride { get; set; }
+    public static string? PathOverride
+    {
+        get => pathOverride;
+        set { lock (Sync) { pathOverride = value; cache = null; } }
+    }
+    private static string? pathOverride;
 
     private static readonly object Sync = new();
+    // Some settings are read many times a second (the wheel checks pinWheel on every poll), so the
+    // parsed file is kept in memory and only read again after it changed on disk.
+    private static JsonObject? cache;
+    private static DateTime cacheStamp;
 
     private static string FilePath => PathOverride ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZestDrop", "settings.json");
 
@@ -33,9 +42,14 @@ internal static class Settings
 
     private static JsonObject Read()
     {
+        DateTime stamp = File.GetLastWriteTimeUtc(FilePath);
+        if (cache != null && stamp == cacheStamp)
+            return cache;
         try
-        { return JsonNode.Parse(File.ReadAllText(FilePath)) as JsonObject ?? new JsonObject(); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return new JsonObject(); }
+        { cache = JsonNode.Parse(File.ReadAllText(FilePath)) as JsonObject ?? new JsonObject(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { cache = new JsonObject(); }
+        cacheStamp = stamp;
+        return cache;
     }
 
     private static void Write(string key, JsonNode? value)

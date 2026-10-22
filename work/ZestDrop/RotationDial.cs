@@ -15,8 +15,8 @@ internal sealed class RotationDial : Slider
     private bool dragging;
     private static readonly Pen Tick = new(new SolidColorBrush(Color.FromRgb(182, 190, 201)), 1);
     private static readonly Pen MajorTick = new(new SolidColorBrush(Color.FromRgb(115, 126, 142)), 1.3);
-    internal static string Caption => L.English ? "Rotation angle" : "旋转角度";
-    internal static string Help => L.English ? "Drag the ruler · Shift for fine control · Double-click to reset" : "拖动刻度 · 按住 Shift 微调 · 双击归零";
+    internal static string Caption => L.T("旋转角度");
+    internal static string Help => L.T("拖动刻度 · 按住 Shift 微调 · 双击归零");
 
     public RotationDial()
     {

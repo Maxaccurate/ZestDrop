@@ -38,9 +38,10 @@ def run(language):
         return json.loads(response.read_text(encoding='utf8'))['Files'][0]['Error']
 
 
-english, chinese = run('en'), run('zh')
+english, chinese, arabic = run('en'), run('zh'), run('ar')
 check('errors come back in English when the app is set to English', english == 'Unsupported archive format', english)
 check('errors stay in Chinese otherwise', chinese == '不支持的压缩包格式', chinese)
+check('Arabic falls back to English, not Chinese', arabic == 'Unsupported archive format', arabic)
 
 failed = [c for c in checks if not c['passed']]
 print(json.dumps({'passed': len(checks) - len(failed), 'failed': len(failed), 'checks': checks}, ensure_ascii=False, indent=1))

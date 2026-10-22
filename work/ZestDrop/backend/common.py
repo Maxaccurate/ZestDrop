@@ -10,7 +10,8 @@ VIDEO_EXT={'.mp4','.mov','.mkv','.webm','.avi','.wmv','.gif'}
 AUDIO_EXT={'.mp3','.m4a','.wav','.flac','.ogg','.opus','.aiff','.aif','.wma'}
 # Interface language for messages, chosen in the app and passed to each worker. Chinese strings double as keys.
 from translations import EN
-LANG='en' if os.environ.get('ZESTDROP_LANG')=='en' else 'zh'
+# Arabic has no backend translation yet, so it gets English messages like every other non-Chinese language.
+LANG='zh' if os.environ.get('ZESTDROP_LANG','zh')=='zh' else 'en'
 def T(text): return EN.get(text,text) if LANG=='en' else text
 
 # Staged outputs carry the app's job id, so cancelling one job never removes another job's files.

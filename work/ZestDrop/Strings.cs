@@ -12,7 +12,7 @@ internal static partial class L
 
     public static event Action? Changed;
 
-// "ar", "en", or "zh". Defaults to Arabic on Arabic Windows, Chinese on Chinese Windows, and English elsewhere.
+    // "ar", "en", or "zh". Defaults to Arabic on Arabic Windows, Chinese on Chinese Windows, and English elsewhere.
     public static string Language
     {
         // ZESTDROP_LANG (set for worker processes) wins, so child processes such as the Office bridge match the app.
@@ -35,12 +35,14 @@ internal static partial class L
 
     public static bool English => Language == "en";
     public static bool Arabic => Language == "ar";
+    private static bool Chinese => Language == "zh";
 
     public static string T(string chinese)
     {
         if (Arabic && Ar.TryGetValue(chinese, out var arabic))
             return arabic;
-        if (English && En.TryGetValue(chinese, out var english))
+        // Arabic text not translated yet falls back to English rather than Chinese.
+        if (!Chinese && En.TryGetValue(chinese, out var english))
             return english;
         return chinese;
     }

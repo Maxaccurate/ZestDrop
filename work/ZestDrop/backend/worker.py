@@ -189,7 +189,7 @@ def frame_step(path,params):
     return {'Time':min(candidates) if direction>0 and candidates else max(candidates) if candidates else t}
 
 def analyze(path,params):
-    import subprocess,re
+    import subprocess
     filters=f"loudnorm=I={number(params,'loudness',-16)}:LRA={number(params,'range',11)}:TP={number(params,'peak',-1.5)}:print_format=json"
     result=subprocess.run([str(FFMPEG),'-hide_banner','-nostdin','-i',str(path),'-af',filters,'-f','null','-'],capture_output=True,text=True,encoding='utf8',errors='replace',creationflags=0x08000000)
     if result.returncode:raise RuntimeError(result.stderr[-1200:])

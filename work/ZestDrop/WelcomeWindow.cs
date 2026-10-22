@@ -65,8 +65,8 @@ internal sealed class WelcomeWindow : Window
         var hide = new CheckBox { Content = L.T("启动时不再显示此窗口"), IsChecked = Settings.GetBool(HideAtStartKey, false), Margin = new Thickness(0, 18, 0, 0), Foreground = UiTheme.Muted };
         hide.Click += (_, _) => Settings.Set(HideAtStartKey, hide.IsChecked == true);
         panel.Children.Add(hide);
-        var pinWheel = new CheckBox { Content = L.T("固定菜单（松手不关闭）"), IsChecked = Settings.GetBool("pinWheel", false), Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("固定菜单（松开鼠标按键不关闭，点击选项或空白处关闭）"), Foreground = UiTheme.Muted };
-        pinWheel.Click += (_, _) => Settings.Set("pinWheel", pinWheel.IsChecked == true);
+        var pinWheel = new CheckBox { Content = L.T("固定菜单（松手不关闭）"), IsChecked = Settings.GetBool(DropWheel.PinnedKey, false), Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("固定菜单（松开鼠标按键不关闭，点击选项或空白处关闭）"), Foreground = UiTheme.Muted };
+        pinWheel.Click += (_, _) => Settings.Set(DropWheel.PinnedKey, pinWheel.IsChecked == true);
         panel.Children.Add(pinWheel);
         startup = new CheckBox { Content = L.T("开机自启"), IsEnabled = false, Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("登录 Windows 后在后台运行，不打开欢迎窗口。") };
         startupMessage = new TextBlock { Foreground = UiTheme.Muted, FontSize = 11, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(6, 3, 0, 0) };
