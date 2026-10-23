@@ -93,11 +93,15 @@ internal static class Program
     {
         Console.WriteLine("\n--- 2. Archive-to-ZIP Format Routing ---");
 
-        // .7z, .tar, .rar to .zip should NOT be handled by NativeEngines (which creates loose ZIP container),
-        // but delegated to the full backend archive repacking.
-        Assert(!NativeEngines.CanHandlePair("7z", "zip"), "7z -> zip is routed away from NativeEngines to archive backend");
-        Assert(!NativeEngines.CanHandlePair("tar", "zip"), "tar -> zip is routed away from NativeEngines to archive backend");
-        Assert(!NativeEngines.CanHandlePair("rar", "zip"), "rar -> zip is routed away from NativeEngines to archive backend");
+        // Archive aliases (.tgz, .tbz, .tbz2, .txz) to .zip should NOT be handled by NativeEngines
+        // (which creates loose ZIP container), but delegated to the full backend archive repacking.
+        Assert(!NativeEngines.CanHandlePair("tgz", "zip"), "tgz -> zip is routed away from NativeEngines to archive backend");
+        Assert(!NativeEngines.CanHandlePair("tbz", "zip"), "tbz -> zip is routed away from NativeEngines to archive backend");
+        Assert(!NativeEngines.CanHandlePair("tbz2", "zip"), "tbz2 -> zip is routed away from NativeEngines to archive backend");
+        Assert(!NativeEngines.CanHandlePair("txz", "zip"), "txz -> zip is routed away from NativeEngines to archive backend");
+        Assert(Catalog.Archives.Contains("tgz"), "Catalog.Archives contains tgz");
+        Assert(Catalog.Extension("sample.tgz") == "gz", "Catalog.Extension normalizes sample.tgz to gz");
+        Assert(Catalog.Category("sample.tgz") == "archive", "Catalog.Category classifies sample.tgz as archive");
 
         // Loose files to .zip should still be handled natively
         Assert(NativeEngines.CanHandlePair("txt", "zip"), "txt -> zip is handled natively as loose zip packaging");
@@ -197,32 +201,110 @@ internal static class Program
 
     private static void TestSheetFormulaPreservation()
     {
-        Console.WriteLine("\n--- 6. Sheet Formula Preservation (XLSX <-> ODS) ---");
+        Console.WriteLine("\n--- 6. Sheet Formula Translation & XLSX Cell Typing ---");
+
+        // 6.1 FormulaTranslator unit tests
+        Assert(FormulaTranslator.ToOpenFormula("SUM(A1:A2)") == "of:=SUM([.A1:.A2])",
+            $"FormulaTranslator ToOpenFormula SUM: {FormulaTranslator.ToOpenFormula("SUM(A1:A2)")}");
+        Assert(FormulaTranslator.ToOpenFormula("IF(A1>0,A1,0)") == "of:=IF([.A1]>0;[.A1];0)",
+            $"FormulaTranslator ToOpenFormula IF: {FormulaTranslator.ToOpenFormula("IF(A1>0,A1,0)")}");
+        Assert(FormulaTranslator.ToOpenFormula("Sheet1!A1:B5") == "of:=[Sheet1.A1:Sheet1.B5]",
+            $"FormulaTranslator ToOpenFormula cross-sheet: {FormulaTranslator.ToOpenFormula("Sheet1!A1:B5")}");
+        Assert(FormulaTranslator.ToOpenFormula("LOG10(A1)") == "of:=LOG10([.A1])",
+            $"FormulaTranslator ToOpenFormula function with number: {FormulaTranslator.ToOpenFormula("LOG10(A1)")}");
+
+        Assert(FormulaTranslator.ToExcelFormula("of:=SUM([.A1:.A2])") == "SUM(A1:A2)",
+            $"FormulaTranslator ToExcelFormula SUM: {FormulaTranslator.ToExcelFormula("of:=SUM([.A1:.A2])")}");
+        Assert(FormulaTranslator.ToExcelFormula("of:=IF([.A1]>0;[.A1];0)") == "IF(A1>0,A1,0)",
+            $"FormulaTranslator ToExcelFormula IF: {FormulaTranslator.ToExcelFormula("of:=IF([.A1]>0;[.A1];0)")}");
+        Assert(FormulaTranslator.ToExcelFormula("of:=[Sheet1.A1:Sheet1.B5]") == "Sheet1!A1:B5",
+            $"FormulaTranslator ToExcelFormula cross-sheet: {FormulaTranslator.ToExcelFormula("of:=[Sheet1.A1:Sheet1.B5]")}");
+        Assert(FormulaTranslator.ToExcelFormula("of:=LOG10([.A1])") == "LOG10(A1)",
+            $"FormulaTranslator ToExcelFormula function with number: {FormulaTranslator.ToExcelFormula("of:=LOG10([.A1])")}");
 
         var tempXlsx = Path.Combine(Path.GetTempPath(), $"test_formula_{Guid.NewGuid():N}.xlsx");
         var tempOds = Path.Combine(Path.GetTempPath(), $"test_formula_{Guid.NewGuid():N}.ods");
 
         try
         {
-            // Create workbook with formula
+            // Create workbook with all formula cell types
             var wb = new Workbook();
             var sheet = new Worksheet("Sheet1");
             wb.Sheets.Add(sheet);
+
+            // Row 0: Inputs
             sheet.Set(0, 0, new SheetCell("10", CellStyle.Default, IsNumber: true) { Value = 10 });
             sheet.Set(1, 0, new SheetCell("20", CellStyle.Default, IsNumber: true) { Value = 20 });
+
+            // Cell A3: Numeric formula -> <c r="A3"><f>SUM(A1:A2)</f><v>30</v></c> (no t attribute)
             sheet.Set(2, 0, new SheetCell("30", CellStyle.Default, IsNumber: true) { Value = 30, Formula = "SUM(A1:A2)" });
 
-            // Test XLSX Writer & Reader
-            XlsxWriter.Write(wb, tempXlsx);
-            var readXlsxWb = XlsxReader.Read(tempXlsx);
-            var readXlsxCell = readXlsxWb.Sheets[0].Get(2, 0);
-            Assert(readXlsxCell?.Formula == "SUM(A1:A2)", $"XLSX roundtrip preserved formula (expected 'SUM(A1:A2)', got '{readXlsxCell?.Formula}')");
+            // Cell B1: Boolean formula -> <c r="B1" t="b"><f>A1>0</f><v>1</v></c>
+            sheet.Set(0, 1, new SheetCell("TRUE", CellStyle.Default) { Value = 1, IsBoolean = true, Formula = "A1>0" });
 
-            // Test ODS Writer & Reader
+            // Cell B2: String formula -> <c r="B2" t="str"><f>CONCAT("A","B")</f><v>AB</v></c>
+            sheet.Set(1, 1, new SheetCell("AB", CellStyle.Default) { Formula = "CONCAT(\"A\",\"B\")" });
+
+            // Cell B3: Error formula -> <c r="B3" t="e"><f>A1/0</f><v>#DIV/0!</v></c>
+            sheet.Set(2, 1, new SheetCell("#DIV/0!", CellStyle.Default) { IsError = true, Formula = "A1/0" });
+
+            // 6.2 Write XLSX and inspect XML markup
+            XlsxWriter.Write(wb, tempXlsx);
+            using (var zip = ZipFile.OpenRead(tempXlsx))
+            {
+                var entry = zip.GetEntry("xl/worksheets/sheet1.xml");
+                Assert(entry != null, "XLSX contains xl/worksheets/sheet1.xml");
+                using var reader = new StreamReader(entry!.Open());
+                var sheetXml = reader.ReadToEnd();
+
+                // Numeric formula: <f> present, NO t="..."
+                Assert(sheetXml.Contains("<f>SUM(A1:A2)</f><v>30</v></c>"), "XLSX numeric formula written without t attribute and with <f>");
+
+                // Boolean formula: t="b" AND <f> present
+                Assert(sheetXml.Contains("t=\"b\"><f>A1&gt;0</f><v>1</v></c>"), "XLSX boolean formula written with t=\"b\" and <f>");
+
+                // String formula: t="str" AND <f> present
+                Assert(sheetXml.Contains("t=\"str\"><f>CONCAT(&quot;A&quot;,&quot;B&quot;)</f><v>AB</v></c>"), "XLSX string formula written with t=\"str\" and <f>");
+
+                // Error formula: t="e" AND <f> present
+                Assert(sheetXml.Contains("t=\"e\"><f>A1/0</f><v>#DIV/0!</v></c>"), "XLSX error formula written with t=\"e\" and <f>");
+            }
+
+            // 6.3 Read back XLSX
+            var readXlsxWb = XlsxReader.Read(tempXlsx);
+            var numCell = readXlsxWb.Sheets[0].Get(2, 0);
+            var boolCell = readXlsxWb.Sheets[0].Get(0, 1);
+            var strCell = readXlsxWb.Sheets[0].Get(1, 1);
+            var errCell = readXlsxWb.Sheets[0].Get(2, 1);
+
+            Assert(numCell?.Formula == "SUM(A1:A2)" && numCell.Value == 30, "XLSX read back numeric formula & value");
+            Assert(boolCell?.Formula == "A1>0" && boolCell.IsBoolean && boolCell.Value == 1, "XLSX read back boolean formula & flag");
+            Assert(strCell?.Formula == "CONCAT(\"A\",\"B\")" && strCell.Text == "AB", "XLSX read back string formula & text");
+            Assert(errCell?.Formula == "A1/0" && errCell.IsError && errCell.Text == "#DIV/0!", "XLSX read back error formula & text");
+
+            // 6.4 Write ODS and verify OpenFormula syntax & namespace
             OdsWriter.Write(wb, tempOds);
+            using (var zip = ZipFile.OpenRead(tempOds))
+            {
+                var entry = zip.GetEntry("content.xml");
+                Assert(entry != null, "ODS contains content.xml");
+                using var reader = new StreamReader(entry!.Open());
+                var contentXml = reader.ReadToEnd();
+
+                Assert(contentXml.Contains("xmlns:of=\"urn:oasis:names:tc:opendocument:xmlns:of:1.2\""),
+                    "ODS content.xml declares xmlns:of namespace");
+                Assert(contentXml.Contains("table:formula=\"of:=SUM([.A1:.A2])\""),
+                    "ODS translates Excel SUM formula to OpenFormula of:=SUM([.A1:.A2])");
+                Assert(contentXml.Contains("table:formula=\"of:=[.A1]&gt;0\""),
+                    "ODS translates Excel boolean formula to OpenFormula of:=[.A1]>0");
+            }
+
+            // 6.5 Read back ODS and ensure formulas translated back to Excel syntax
             var readOdsWb = OdsReader.Read(tempOds);
-            var readOdsCell = readOdsWb.Sheets[0].Get(2, 0);
-            Assert(readOdsCell?.Formula == "SUM(A1:A2)", $"ODS roundtrip preserved formula (expected 'SUM(A1:A2)', got '{readOdsCell?.Formula}')");
+            var odsNumCell = readOdsWb.Sheets[0].Get(2, 0);
+            var odsBoolCell = readOdsWb.Sheets[0].Get(0, 1);
+            Assert(odsNumCell?.Formula == "SUM(A1:A2)", $"ODS formula translated back to Excel syntax (expected 'SUM(A1:A2)', got '{odsNumCell?.Formula}')");
+            Assert(odsBoolCell?.Formula == "A1>0", $"ODS boolean formula translated back to Excel syntax (expected 'A1>0', got '{odsBoolCell?.Formula}')");
         }
         finally
         {

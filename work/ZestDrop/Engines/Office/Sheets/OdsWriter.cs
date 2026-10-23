@@ -27,6 +27,7 @@ internal static class OdsWriter
         "xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\" " +
         "xmlns:table=\"urn:oasis:names:tc:opendocument:xmlns:table:1.0\" " +
         "xmlns:fo=\"urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0\" " +
+        "xmlns:of=\"urn:oasis:names:tc:opendocument:xmlns:of:1.2\" " +
         "xmlns:number=\"urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0\"";
 
     /// <summary>Columns written per sheet: LibreOffice before 7.4 stops at 1024 and warns about anything beyond.</summary>
@@ -186,9 +187,8 @@ internal static class OdsWriter
 
         if (!string.IsNullOrEmpty(cell.Formula))
         {
-            var f = cell.Formula.Trim();
-            if (f.StartsWith("=")) f = f[1..];
-            sb.Append(CultureInfo.InvariantCulture, $" table:formula=\"of:={SecurityElement.Escape(f)}\"");
+            var of = FormulaTranslator.ToOpenFormula(cell.Formula);
+            sb.Append(CultureInfo.InvariantCulture, $" table:formula=\"{SecurityElement.Escape(of)}\"");
         }
 
         if (cell.Text.Length == 0)

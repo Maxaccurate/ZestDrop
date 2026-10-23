@@ -123,24 +123,41 @@ internal static class XlsxWriter
         sb.Append("</cols>");
     }
 
+    private static bool IsErrorText(string? text) =>
+        text is "#DIV/0!" or "#N/A" or "#VALUE!" or "#REF!" or "#NAME?" or "#NUM!" or "#NULL!" or "#SPILL!" or "#CALC!";
+
     private static void Cell(StringBuilder sb, string reference, SheetCell cell, StyleTable styles)
     {
         var number = cell.Value ?? (cell.IsNumber && double.TryParse(cell.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) ? parsed : null);
         var style = styles.Index(cell.Style, number is null || cell.IsBoolean ? null : cell.NumberFormat);
         var s = style == 0 ? "" : $" s=\"{style}\"";
-        if (cell.IsBoolean && number is { } flag)
-            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"b\"><v>{(flag != 0 ? 1 : 0)}</v></c>");
+        var f = !string.IsNullOrEmpty(cell.Formula) ? $"<f>{Escape(cell.Formula)}</f>" : "";
+
+        if (cell.IsBoolean)
+        {
+            var flag = number is { } n ? (n != 0 ? 1 : 0) : (cell.Text.Equals("TRUE", StringComparison.OrdinalIgnoreCase) ? 1 : 0);
+            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"b\">{f}<v>{flag}</v></c>");
+        }
+        else if (cell.IsError || IsErrorText(cell.Text))
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"e\">{f}<v>{Escape(cell.Text)}</v></c>");
+        }
         else if (number is { } value && double.IsFinite(value))
         {
-            var f = !string.IsNullOrEmpty(cell.Formula) ? $"<f>{Escape(cell.Formula)}</f>" : "";
             sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s}>{f}<v>{value.ToString("R", CultureInfo.InvariantCulture)}</v></c>");
         }
         else if (!string.IsNullOrEmpty(cell.Formula))
-            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s}><f>{Escape(cell.Formula)}</f><v>{Escape(cell.Text)}</v></c>");
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"str\">{f}<v>{Escape(cell.Text)}</v></c>");
+        }
         else if (cell.Text.Length == 0)
+        {
             sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s}/>");
+        }
         else
+        {
             sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"inlineStr\"><is><t xml:space=\"preserve\">{Escape(cell.Text)}</t></is></c>");
+        }
     }
 
     /// <summary>0 → "A", 26 → "AA".</summary>

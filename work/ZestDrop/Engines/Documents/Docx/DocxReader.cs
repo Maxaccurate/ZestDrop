@@ -61,7 +61,8 @@ internal sealed partial class DocxReader
     /// <summary>Reads <paramref name="path"/>; embedded pictures are extracted into <paramref name="mediaFolder"/>.</summary>
     public static HDocument Read(string path, string mediaFolder)
     {
-        using var zip = ZipFile.OpenRead(path);
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
         return new DocxReader(zip, mediaFolder).ReadDocument();
     }
 

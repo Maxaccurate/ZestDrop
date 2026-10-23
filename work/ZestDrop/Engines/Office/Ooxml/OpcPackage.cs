@@ -21,7 +21,11 @@ internal sealed class OpcPackage : IDisposable
     private readonly Dictionary<string, XDocument?> _parts = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Dictionary<string, OpcRelationship>> _relationships = new(StringComparer.OrdinalIgnoreCase);
 
-    public OpcPackage(string path) => _zip = ZipFile.OpenRead(path);
+    public OpcPackage(string path)
+    {
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        _zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
+    }
 
     /// <summary>The main part (target of the package's officeDocument relationship), e.g. xl/workbook.xml.</summary>
     public string? MainPartPath =>

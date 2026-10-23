@@ -87,12 +87,12 @@ internal static class Catalog
     public static string Extension(string path)
     {
         string ext = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
-        return ext switch { "jpeg" => "jpg", "tif" => "tiff", "heif" => "heic", "aif" => "aiff", "tgz" => "gz", _ => ext };
+        return ext switch { "jpeg" => "jpg", "tif" => "tiff", "heif" => "heic", "aif" => "aiff", "tgz" => "gz", "tbz" => "tar", "tbz2" => "tar", "txz" => "tar", _ => ext };
     }
     public static readonly string[] Images = ["jpg", "png", "webp", "heic", "tiff", "svg", "avif", "bmp", "icns"];
     public static readonly string[] Audio = ["mp3", "m4a", "wav", "flac", "ogg", "opus", "aiff", "wma"];
     public static readonly string[] Video = ["mp4", "mov", "mkv", "webm", "avi", "wmv"];
-    public static readonly string[] Archives = ["zip", "tar", "gz", "rar", "7z"];
+    public static readonly string[] Archives = ["zip", "tar", "gz", "rar", "7z", "tgz", "tbz", "tbz2", "txz"];
     public static readonly string[] OfficeSlides = ["ppt", "pptx", "pptm", "pps", "ppsx", "odp"];
     public static readonly string[] OfficeWords = ["doc", "docx", "docm", "rtf", "odt"];
     public static readonly string[] OfficeSheets = ["xls", "xlsx", "xlsm", "xlsb", "ods", "csv", "tsv"];

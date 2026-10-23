@@ -55,7 +55,7 @@ public static class NativeEngines
 
         foreach (var path in job.Paths)
         {
-            var fromExt = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
+            var fromExt = Catalog.Extension(path);
             if (!CanHandlePair(fromExt, targetExt))
                 return false;
         }
@@ -65,6 +65,8 @@ public static class NativeEngines
 
     public static bool CanHandlePair(string fromExt, string targetExt)
     {
+        fromExt = Catalog.Extension("file." + fromExt);
+        targetExt = Catalog.Extension("file." + targetExt);
         // 3D Engine
         if (Model3DEngine.CanHandle(fromExt, targetExt))
             return true;
@@ -248,7 +250,7 @@ public static class NativeEngines
 
             try
             {
-                var fromExt = Path.GetExtension(inputPath).TrimStart('.').ToLowerInvariant();
+                var fromExt = Catalog.Extension(inputPath);
                 string resolvedOutput = OutputPathHelper.Resolve(inputPath, targetExt, targetDir);
 
                 if (Model3DEngine.CanHandle(fromExt, targetExt))

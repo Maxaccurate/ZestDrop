@@ -249,7 +249,7 @@ internal sealed class XlsxReader
                 return new SheetCell(raw is "1" or "true" ? "TRUE" : "FALSE", style) { Value = raw is "1" or "true" ? 1 : 0, IsBoolean = true, Formula = formula };
 
             case "e": // #N/A, #VALUE!, ...
-                return new SheetCell(raw ?? "", style) { Formula = formula };
+                return new SheetCell(raw ?? "", style) { Formula = formula, IsError = true };
 
             case "str": // cached string of a formula
                 return new SheetCell(raw ?? "", style) { Formula = formula };

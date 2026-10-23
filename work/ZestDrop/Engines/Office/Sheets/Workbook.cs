@@ -183,6 +183,9 @@ internal sealed record SheetCell(string Text, CellStyle Style, bool IsNumber = f
     /// <summary>A TRUE / FALSE cell (<see cref="Value"/> is 1 or 0).</summary>
     public bool IsBoolean { get; init; }
 
+    /// <summary>A cell containing an error value (e.g. #DIV/0!, #N/A).</summary>
+    public bool IsError { get; init; }
+
     /// <summary>The cell's formula (e.g. "SUM(A1:A2)"); null if the cell has a literal value.</summary>
     public string? Formula { get; init; }
 

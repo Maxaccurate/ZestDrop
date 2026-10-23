@@ -52,7 +52,8 @@ internal sealed class OdsReader
     /// <summary>Reads every visible sheet of <paramref name="path"/>.</summary>
     public static Workbook Read(string path)
     {
-        using var zip = ZipFile.OpenRead(path);
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
         if (IsEncrypted(zip))
             throw new InvalidDataException("The spreadsheet is protected with a password (encrypted). Remove the password in LibreOffice and convert it again.");
         var content = Load(zip, "content.xml") ?? throw new InvalidDataException("The file is not an OpenDocument spreadsheet (no content.xml).");
@@ -456,20 +457,17 @@ internal sealed class OdsReader
         }
 
         var rawFormula = (string?)element.Attribute(Table + "formula");
-        string? formula = null;
-        if (!string.IsNullOrEmpty(rawFormula))
-        {
-            formula = rawFormula;
-            if (formula.StartsWith("of:=", StringComparison.OrdinalIgnoreCase)) formula = formula[4..];
-            else if (formula.StartsWith("oooc:=", StringComparison.OrdinalIgnoreCase)) formula = formula[6..];
-            else if (formula.StartsWith("=")) formula = formula[1..];
-        }
+        string? formula = !string.IsNullOrEmpty(rawFormula) ? FormulaTranslator.ToExcelFormula(rawFormula) : null;
 
         var text = Paragraphs(element);
+        var stringVal = (string?)element.Attribute(Office + "string-value");
+        var cellText = text ?? stringVal ?? (type == "boolean" ? (value == 1 ? "TRUE" : "FALSE") : "");
+        var isError = type == "error" || cellText.StartsWith("#DIV/0!") || cellText.StartsWith("#N/A") || cellText.StartsWith("#VALUE!") || cellText.StartsWith("#REF!") || cellText.StartsWith("#NAME?") || cellText.StartsWith("#NUM!") || cellText.StartsWith("#NULL!");
+
         if (type == "boolean")
-            return new SheetCell(text ?? (value == 1 ? "TRUE" : "FALSE"), style) { Value = value, IsBoolean = true, Formula = formula };
+            return new SheetCell(cellText, style) { Value = value, IsBoolean = true, Formula = formula };
         if (value is not { } v)
-            return new SheetCell(text ?? (string?)element.Attribute(Office + "string-value") ?? "", style) { Formula = formula };
+            return new SheetCell(cellText, style) { Formula = formula, IsError = isError };
 
         var format = FormatOf(dataStyle) ?? type switch
         {
