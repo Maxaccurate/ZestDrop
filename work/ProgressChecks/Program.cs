@@ -252,8 +252,12 @@ internal static class Checks
             var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c ping -n 40 127.0.0.1 > \"{output}\"") { CreateNoWindow = true, UseShellExecute = false })!;
             try
             {
-                Thread.Sleep(2500);
-                long before = new FileInfo(output).Length;
+                long before = 0;
+                for (int w = 0; w < 30 && before == 0; w++)
+                {
+                    Thread.Sleep(200);
+                    if (File.Exists(output)) before = new FileInfo(output).Length;
+                }
                 Require(before > 0);
                 using (var pause = ProcessTreePause.Suspend(process))
                 {
@@ -262,8 +266,13 @@ internal static class Checks
                     Thread.Sleep(3000);
                     Require(new FileInfo(output).Length == frozen);
                     pause.Resume();
-                    Thread.Sleep(3000);
-                    Require(new FileInfo(output).Length > frozen);
+                    long after = frozen;
+                    for (int w = 0; w < 30 && after <= frozen; w++)
+                    {
+                        Thread.Sleep(200);
+                        after = new FileInfo(output).Length;
+                    }
+                    Require(after > frozen);
                 }
             }
             finally
@@ -718,7 +727,18 @@ internal static class Checks
             }
             finally { try { Directory.Delete(root, true); } catch (IOException) { } }
         });
-        File.WriteAllText(args[0],JsonSerializer.Serialize(new{passed=checks.Count-failed,failed,checks},new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine($"passed={checks.Count-failed}, failed={failed}");return failed==0?0:1;
+        File.WriteAllText(args[0], JsonSerializer.Serialize(new { passed = checks.Count - failed, failed, checks }, new JsonSerializerOptions { WriteIndented = true }));
+        Console.WriteLine($"passed={checks.Count - failed}, failed={failed}");
+        if (failed > 0)
+        {
+            foreach (var c in checks)
+            {
+                var el = JsonSerializer.SerializeToElement(c);
+                if (el.TryGetProperty("passed", out var p) && !p.GetBoolean())
+                    Console.WriteLine($"  FAILED TEST: {el.GetProperty("test").GetString()} -> {el.GetProperty("error").GetString()}");
+            }
+        }
+        return failed == 0 ? 0 : 1;
     }
     private static string JobValidationMessage()
     {
