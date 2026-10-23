@@ -345,15 +345,16 @@ internal static class Checks
             Settings.PathOverride = file;
             try
             {
-                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", false) == false);
+                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", false) == false, "Initial settings should be empty");
                 Settings.Set("language", "en");
                 Settings.Set("hideWelcome", true);
                 Settings.Set("language", "zh");
-                Require(Settings.GetString("language") == "zh" && Settings.GetBool("hideWelcome", false));
+                Require(Settings.GetString("language") == "zh" && Settings.GetBool("hideWelcome", false), "Settings should persist written values");
                 File.WriteAllText(file, "{ this is not json");
-                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", true));
+                File.SetLastWriteTimeUtc(file, DateTime.UtcNow.AddSeconds(1));
+                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", true), "Damaged file should fall back to defaults");
                 Settings.Set("hideWelcome", false);
-                Require(!Settings.GetBool("hideWelcome", true) && !File.Exists(file + ".tmp"));
+                Require(!Settings.GetBool("hideWelcome", true) && !File.Exists(file + ".tmp"), "Overwriting damaged file should succeed without leaving temp file");
             }
             finally
             {
