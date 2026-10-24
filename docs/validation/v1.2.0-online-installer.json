@@ -1,0 +1,71 @@
+{
+  "passed": 16,
+  "failed": 0,
+  "payload_files": 1966,
+  "checks": [
+    {
+      "name": "Propagates child exit code 0",
+      "passed": true
+    },
+    {
+      "name": "Forwards Unicode destination, language, silent mode and task choice",
+      "passed": true
+    },
+    {
+      "name": "Keeps outer log parameters out of the child command line",
+      "passed": true
+    },
+    {
+      "name": "Rejects bad-hash before executing the downloaded file",
+      "passed": true
+    },
+    {
+      "name": "Rejects http-error before executing the downloaded file",
+      "passed": true
+    },
+    {
+      "name": "Propagates child exit code 9",
+      "passed": true
+    },
+    {
+      "name": "Bootstrap fixtures create no installed-app entry or Start menu folder",
+      "passed": true
+    },
+    {
+      "name": "Real GitHub download hands off to a successful per-user installation",
+      "passed": true
+    },
+    {
+      "name": "Downloaded offline installer passes the embedded integrity check",
+      "passed": true
+    },
+    {
+      "name": "Installs into the forwarded Unicode path",
+      "passed": true
+    },
+    {
+      "name": "All application files match the validated offline installer",
+      "passed": true
+    },
+    {
+      "name": "Only the real application is registered in Installed apps",
+      "passed": true
+    },
+    {
+      "name": "Online-installed application converts an image and preserves the original",
+      "passed": true
+    },
+    {
+      "name": "Online-installed application uninstalls successfully",
+      "passed": true
+    },
+    {
+      "name": "Online test leaves no application files or installed-app entry",
+      "passed": true
+    },
+    {
+      "name": "Preserves existing settings, startup and Explorer registrations",
+      "passed": true
+    }
+  ]
+}
