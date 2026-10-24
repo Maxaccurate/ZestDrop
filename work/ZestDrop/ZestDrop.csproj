@@ -4,9 +4,9 @@
     <AssemblyName>ZestDrop</AssemblyName>
     <RootNamespace>ZestDrop</RootNamespace>
     <Product>ZestDrop</Product>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Title>ZestDrop</Title>
     <Description>Drag. Drop. Convert. Desktop file tools for Windows.</Description>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -37,6 +37,9 @@
     <Resource Include="assets/fonts/SourceHanSansCN-Medium.otf" />
     <Content Include="assets/fonts/OFL.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="zestdrop.cmd" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Third-party notices shipped inside these NuGet packages; keep the versions in step with the PackageReferences below. -->
+    <Content Include="$(NuGetPackageRoot)skiasharp.nativeassets.win32/3.119.4/THIRD-PARTY-NOTICES.txt" Link="licenses/SkiaSharp-THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(NuGetPackageRoot)microsoft.maui.graphics/10.0.110/THIRD-PARTY-NOTICES.TXT" Link="licenses/Microsoft.Maui.Graphics-THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="backend\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>

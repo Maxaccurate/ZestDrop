@@ -62,13 +62,21 @@ public static class CliRunner
         TextWriter errors,
         CancellationToken cancellationToken)
     {
-        var targetExt = options.TargetFormat!.TrimStart('.').ToLowerInvariant();
+        // Same spelling as the app uses (jpeg -> jpg, tif -> tiff, ...), so every engine recognises the target.
+        var targetExt = Catalog.Extension("file." + options.TargetFormat!.TrimStart('.'));
         var files = ExpandInputs(options.Inputs, options.Recursive, errors);
         if (files.Count == 0)
         {
             errors.WriteLine("zestdrop: No matching files found to convert.");
             return NothingToDo;
         }
+        // Refuse targets a file cannot be converted to, instead of passing them on and getting an unrelated engine error.
+        var unsupported = files.Where(file => !CanConvert(file, targetExt)).ToList();
+        foreach (var file in unsupported)
+            errors.WriteLine($"zestdrop: Cannot convert {Path.GetFileName(file)} to .{targetExt}. Supported targets: {string.Join(", ", Catalog.Targets(Catalog.Extension(file)))}");
+        files = files.Except(unsupported).ToList();
+        if (files.Count == 0)
+            return UsageError;
 
         string tempFolder = Path.Combine(Path.GetTempPath(), "zestdrop-cli-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempFolder);
@@ -140,12 +148,18 @@ public static class CliRunner
                     : $"Completed {done} of {result.Files.Length} file(s), {failed} failed in {sw.ElapsedMilliseconds} ms.");
             }
 
-            return failed == 0 ? Success : SomeFailed;
+            return failed == 0 && unsupported.Count == 0 ? Success : SomeFailed;
         }
         finally
         {
             try { Directory.Delete(tempFolder, true); } catch { }
         }
+    }
+
+    private static bool CanConvert(string file, string targetExt)
+    {
+        string from = Catalog.Extension(file), to = Catalog.Extension("file." + targetExt);
+        return Catalog.Targets(from).Contains(to) || NativeEngines.CanHandlePair(from, to);
     }
 
     private static async Task<int> WatchAsync(
@@ -161,7 +175,7 @@ public static class CliRunner
             return UsageError;
         }
 
-        string targetExt = options.TargetFormat!.TrimStart('.').ToLowerInvariant();
+        string targetExt = Catalog.Extension("file." + options.TargetFormat!.TrimStart('.'));
         string outputFolder = !string.IsNullOrEmpty(options.OutputFolder)
             ? Path.GetFullPath(options.OutputFolder)
             : Path.Combine(folder, "converted");

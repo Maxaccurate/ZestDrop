@@ -106,7 +106,7 @@
     "https://pypi.org/",
     "https://7-zip.org/"
   ],
-  "app_version": "1.0.0",
+  "app_version": "1.2.0",
   "fonts": [
     {
       "name": "Source Han Sans CN Medium",
@@ -117,6 +117,134 @@
       "source_revision": "a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2",
       "source_path": "SubsetOTF/CN/SourceHanSansCN-Medium.otf",
       "license_path": "assets/fonts/OFL.txt"
+    }
+  ],
+  "dotnet_packages": [
+    {
+      "name": "ACadSharp",
+      "version": "3.8.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Albert Domenech",
+      "source": "https://github.com/DomCR/ACadSharp"
+    },
+    {
+      "name": "AngleSharp",
+      "version": "1.8.2",
+      "license": "MIT",
+      "copyright": "Copyright 2013-2026, AngleSharp",
+      "source": "https://github.com/AngleSharp/AngleSharp"
+    },
+    {
+      "name": "ExcelDataReader",
+      "version": "3.9.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) ExcelDataReader contributors",
+      "source": "https://github.com/ExcelDataReader/ExcelDataReader"
+    },
+    {
+      "name": "ExcelNumberFormat",
+      "version": "1.1.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) andersnm and contributors",
+      "source": "https://github.com/andersnm/ExcelNumberFormat"
+    },
+    {
+      "name": "Markdig",
+      "version": "0.40.0",
+      "license": "BSD-2-Clause",
+      "copyright": "Copyright (c) Alexandre Mutel",
+      "source": "https://github.com/xoofx/markdig"
+    },
+    {
+      "name": "Microsoft.IO.RecyclableMemoryStream",
+      "version": "3.0.1",
+      "license": "MIT",
+      "copyright": "Copyright (c) Microsoft Corporation",
+      "source": "https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream"
+    },
+    {
+      "name": "Microsoft.Maui.Graphics",
+      "version": "10.0.110",
+      "license": "MIT",
+      "copyright": "Copyright (c) .NET Foundation and Contributors",
+      "source": "https://github.com/dotnet/maui"
+    },
+    {
+      "name": "MimeKitLite",
+      "version": "4.10.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) .NET Foundation and Contributors",
+      "source": "https://github.com/jstedfast/MimeKit"
+    },
+    {
+      "name": "MsgReader",
+      "version": "6.2.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2013-2026 Kees van Spelde",
+      "source": "https://github.com/Sicos1977/MSGReader"
+    },
+    {
+      "name": "OpenMcdf",
+      "version": "3.3.0",
+      "license": "MPL-2.0",
+      "copyright": "Copyright (c) 2010-2026 Federico Blaseotto, Jeremy Powell",
+      "source": "https://github.com/ironfede/openmcdf"
+    },
+    {
+      "name": "RtfPipe",
+      "version": "2.0.7677.4303",
+      "license": "MIT",
+      "copyright": "Copyright (c) Eric Domke",
+      "source": "https://github.com/erdomke/RtfPipe"
+    },
+    {
+      "name": "SharpCompress",
+      "version": "1.0.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2025 Adam Hathcock",
+      "source": "https://github.com/adamhathcock/sharpcompress"
+    },
+    {
+      "name": "SharpGLTF.Core",
+      "version": "1.0.7",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Vicente Penades",
+      "source": "https://github.com/vpenades/SharpGLTF"
+    },
+    {
+      "name": "SkiaSharp",
+      "version": "3.119.4",
+      "license": "MIT",
+      "copyright": "Copyright (c) Microsoft Corporation",
+      "source": "https://github.com/mono/SkiaSharp"
+    },
+    {
+      "name": "SkiaSharp.NativeAssets.Win32",
+      "version": "3.119.4",
+      "license": "MIT; bundled Skia and libraries listed in licenses/SkiaSharp-THIRD-PARTY-NOTICES.txt",
+      "copyright": "Copyright (c) Microsoft Corporation",
+      "source": "https://github.com/mono/SkiaSharp"
+    },
+    {
+      "name": "Tomlyn",
+      "version": "2.10.1",
+      "license": "BSD-2-Clause",
+      "copyright": "Copyright (c) Alexandre Mutel",
+      "source": "https://github.com/xoofx/Tomlyn"
+    },
+    {
+      "name": "UTF.Unknown",
+      "version": "2.7.0",
+      "license": "MPL-1.1",
+      "copyright": "Copyright (c) UTF-unknown contributors",
+      "source": "https://github.com/CharsetDetector/UTF-unknown"
+    },
+    {
+      "name": "YamlDotNet",
+      "version": "18.1.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) Antoine Aubry and contributors",
+      "source": "https://github.com/aaubry/YamlDotNet"
     }
   ]
 }
