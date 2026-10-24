@@ -1,0 +1,95 @@
+{
+  "passed": 22,
+  "failed": 0,
+  "payload_files": 1966,
+  "checks": [
+    {
+      "name": "Refuses a nonempty unrelated installation folder",
+      "passed": true
+    },
+    {
+      "name": "Installs without administrator privileges into a Unicode path",
+      "passed": true
+    },
+    {
+      "name": "All installed payload files match the packaged manifest",
+      "passed": true
+    },
+    {
+      "name": "Registers version in per-user Installed apps",
+      "passed": true
+    },
+    {
+      "name": "Creates a Start menu shortcut",
+      "passed": true
+    },
+    {
+      "name": "Installation preserves existing startup and Explorer preferences",
+      "passed": true
+    },
+    {
+      "name": "Installed application executes convert:jpg",
+      "passed": true
+    },
+    {
+      "name": "Installed application executes convert:mp3",
+      "passed": true
+    },
+    {
+      "name": "Background fixture job is active",
+      "passed": true
+    },
+    {
+      "name": "Refuses uninstall while the installed app is processing",
+      "passed": true
+    },
+    {
+      "name": "Refuses upgrade while the installed app is processing",
+      "passed": true
+    },
+    {
+      "name": "Blocked upgrade and uninstall preserve the running job",
+      "passed": true
+    },
+    {
+      "name": "Same-version repair completes successfully",
+      "passed": true
+    },
+    {
+      "name": "Repair restores missing and modified files while preserving user-created files",
+      "passed": true
+    },
+    {
+      "name": "Uninstaller exits successfully",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes its files, shortcut and Installed apps entry",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes Python bytecode caches",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes only integrations pointing to this installation",
+      "passed": true
+    },
+    {
+      "name": "Uninstall preserves settings and user-created files",
+      "passed": true
+    },
+    {
+      "name": "Reinstalls cleanly after uninstall",
+      "passed": true
+    },
+    {
+      "name": "Uninstaller exits successfully",
+      "passed": true
+    },
+    {
+      "name": "A clean installation uninstalls without leaving application files",
+      "passed": true
+    }
+  ]
+}

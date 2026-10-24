@@ -8,7 +8,7 @@
 
 A free file converter for Windows that lives in the system tray. Hold **Shift** while dragging any file, and a wheel of formats appears under your cursor. Drop on one to convert.
 
-[Website](https://zestdrop.org) · [Microsoft Store](https://apps.microsoft.com/detail/9NG514X8RQC6) · [Download v1.1.1](#download) · [使用指南（中文）](docs/usage.md)
+[Website](https://zestdrop.org) · [Microsoft Store](https://apps.microsoft.com/detail/9NG514X8RQC6) · [Download v1.2.0](#download) · [使用指南（中文）](docs/usage.md)
 
 </div>
 
@@ -17,7 +17,7 @@ A free file converter for Windows that lives in the system tray. Hold **Shift** 
   <img src="docs/images/wheels-light.png" alt="Two ZestDrop wheels: the format wheel for a photo with JPG selected, and the tools wheel for a video with Trim &amp; split selected" />
 </picture>
 
-- **341 conversions and 48 tools** across images, video, audio, documents and archives.
+- **Hundreds of conversions and 48 tools** across images, video, audio, documents and archives, plus 3D models, CAD drawings, fonts, e-books, subtitles, email and data files.
 - **No main window.** The wheel appears while you drag, and the result is saved next to the original file.
 - **Works offline.** Files are processed on your PC and never uploaded. ZestDrop does not connect to the internet.
 - **Everything included.** The download bundles .NET, Python, FFmpeg and 7-Zip; there is nothing else to install.
@@ -30,14 +30,14 @@ Windows 10 version 1809 or later, x64.
 | | Download | Size |
 | --- | --- | --- |
 | **Microsoft Store** | [Get ZestDrop from the Microsoft Store](https://apps.microsoft.com/detail/9NG514X8RQC6) | Installs and updates through the Store |
-| **Online installer** | [ZestDrop-v1.1.1-windows-x64-online-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64-online-setup.exe) | 2.2 MB to start; downloads and verifies the 150.0 MB installer |
-| **Offline installer** | [ZestDrop-v1.1.1-windows-x64-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64-setup.exe) | 150.0 MB |
-| **Portable 7z** | [ZestDrop-v1.1.1-windows-x64.7z](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64.7z) | 148.0 MB |
-| **Portable ZIP** | [ZestDrop-v1.1.1-windows-x64.zip](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.1.1/ZestDrop-v1.1.1-windows-x64.zip) | 242.1 MB |
+| **Online installer** | [ZestDrop-v1.2.0-windows-x64-online-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.0/ZestDrop-v1.2.0-windows-x64-online-setup.exe) | 2.2 MB to start; downloads and verifies the 156.2 MB installer |
+| **Offline installer** | [ZestDrop-v1.2.0-windows-x64-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.0/ZestDrop-v1.2.0-windows-x64-setup.exe) | 156.2 MB |
+| **Portable 7z** | [ZestDrop-v1.2.0-windows-x64.7z](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.0/ZestDrop-v1.2.0-windows-x64.7z) | 154.9 MB |
+| **Portable ZIP** | [ZestDrop-v1.2.0-windows-x64.zip](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.0/ZestDrop-v1.2.0-windows-x64.zip) | 250.4 MB |
 
 All GitHub downloads contain the same complete application. The installers install for the current user (no administrator rights), add a Start menu shortcut and an uninstaller, and offer an optional desktop shortcut. For a portable bundle, extract the whole archive and run `ZestDrop.exe` from the `ZestDrop` folder; keep `backend`, `runtime` and the DLLs next to it.
 
-The GitHub builds are unsigned, so Windows SmartScreen may warn on first launch. See the [release notes](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.1.1) and [installation and packaging](docs/windows-installer.md) for upgrades and uninstalling.
+The GitHub builds are unsigned, so Windows SmartScreen may warn on first launch. See the [release notes](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.2.0) and [installation and packaging](docs/windows-installer.md) for upgrades and uninstalling.
 
 ## How to use it
 
@@ -92,6 +92,12 @@ New files are saved next to the originals and never overwrite anything; a duplic
 | **Audio** | MP3, M4A, WAV, FLAC, OGG, Opus, AIFF, WMA | Compress, metadata, loudness normalisation, trim and silence removal, channels and balance, volume and fades, noise reduction, join, ringtones (.m4r), visualiser videos, beep redaction |
 | **Documents** | PDF → DOCX, JPG, PNG, TXT; TXT ↔ PDF, images, SRT, VTT; Word, Excel and PowerPoint exports | PDF compress, merge, split, reorder, rotate and remove pages, passwords, page numbers, headers and footers, extract images, watermark, redaction, searchable PDF (OCR) |
 | **Archives** | ZIP, TAR, GZIP, RAR, 7z | Extract, convert, pack files and folders, AES-256 passwords, split volumes |
+| **3D models** | GLB, glTF, OBJ, STL, 3MF, PLY; FBX input; PNG/JPG previews | |
+| **CAD drawings** | DWG ↔ DXF; SVG, PDF, PNG, JPG | |
+| **Fonts** | TTF, OTF, WOFF, WOFF2, EOT | |
+| **E-books** | EPUB, KEPUB, FB2, DOCX, Markdown, HTML, TXT; MOBI, AZW3 and CBZ input | |
+| **Subtitles** | SRT, VTT, ASS, SAMI, LRC, TTML, SUB; SCC input | |
+| **Data and email** | JSON, JSON Lines, YAML, TOML, XML, CSV, TSV, vCard; EML and MSG to HTML or text | |
 
 The wheel shows only what fits the files you drag; with several files selected it shows the operations they all support. Layout-preserving Office exports need the matching desktop Microsoft Word, Excel or PowerPoint.
 
@@ -103,6 +109,8 @@ The wheel shows only what fits the files you drag; with several files selected i
 - **Background jobs.** Each job gets a progress card in the corner of the screen. Two jobs run at once and the rest wait their turn; pausing a job suspends it completely, including FFmpeg.
 - **Audio and video previews.** Tool windows have a player with a seek bar and volume, draggable trim handles, and previews of the effect before you save.
 - **Sticky wheel** (optional) keeps the wheel open after you release the mouse, so you can hover and click instead.
+- **Command line.** `zestdrop convert photo.png --to webp`, `zestdrop watch ./inbox --to png` and `zestdrop formats` work from Command Prompt or PowerShell.
+- **Watch folders** process new files automatically, with an optional inbox mode that moves each original into an `originals` folder afterwards.
 - **Appearance and language.** Match Windows, Light or Dark; English, 简体中文 or العربية (right-to-left). Both are in the tray menu.
 
 See the [usage guide](docs/usage.md) (in Chinese) for every feature and its limits.
