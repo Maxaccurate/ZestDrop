@@ -31,6 +31,7 @@ internal static class Program
         TestGltfExportBufferFlushing();
         TestCffZeroSizedPrivateDict();
         TestSheetFormulaPreservation();
+        SpreadsheetFidelityChecks.Run(Assert);
         TestDocxHtmlImageEmbedding();
         TestCliOptionsAndOutputFolder();
 

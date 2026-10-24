@@ -27,6 +27,7 @@ internal sealed class OdsReader
     private static readonly XNamespace Style = OdsNumberStyles.Style;
     private static readonly XNamespace Fo = OdsNumberStyles.Fo;
     private static readonly XNamespace Number = OdsNumberStyles.Number;
+    private static readonly XNamespace CalcExt = "urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0";
 
     /// <summary>Excel's sheet size; ODS sheets repeat their last empty row and column up to (at least) it.</summary>
     private const int MaxRows = 1_048_576;
@@ -462,7 +463,9 @@ internal sealed class OdsReader
         var text = Paragraphs(element);
         var stringVal = (string?)element.Attribute(Office + "string-value");
         var cellText = text ?? stringVal ?? (type == "boolean" ? (value == 1 ? "TRUE" : "FALSE") : "");
-        var isError = type == "error" || cellText.StartsWith("#DIV/0!") || cellText.StartsWith("#N/A") || cellText.StartsWith("#VALUE!") || cellText.StartsWith("#REF!") || cellText.StartsWith("#NAME?") || cellText.StartsWith("#NUM!") || cellText.StartsWith("#NULL!");
+        // ODF's string type alone cannot distinguish an error from text such as
+        // "#N/A". Calc records that distinction explicitly in its extension.
+        var isError = type == "error" || (string?)element.Attribute(CalcExt + "value-type") == "error";
 
         if (type == "boolean")
             return new SheetCell(cellText, style) { Value = value, IsBoolean = true, Formula = formula };

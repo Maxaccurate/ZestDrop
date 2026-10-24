@@ -128,7 +128,7 @@ internal static class XlsReader
         var value = reader.GetValue(column);
         var style = Style(reader.GetCellStyle(column));
         if (reader.GetCellError(column) is { } error)
-            return new SheetCell(ErrorText(error), style);
+            return new SheetCell(ErrorText(error), style) { IsError = true };
 
         double number;
         switch (value)

@@ -28,6 +28,7 @@ internal static class OdsWriter
         "xmlns:table=\"urn:oasis:names:tc:opendocument:xmlns:table:1.0\" " +
         "xmlns:fo=\"urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0\" " +
         "xmlns:of=\"urn:oasis:names:tc:opendocument:xmlns:of:1.2\" " +
+        "xmlns:calcext=\"urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0\" " +
         "xmlns:number=\"urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0\"";
 
     /// <summary>Columns written per sheet: LibreOffice before 7.4 stops at 1024 and warns about anything beyond.</summary>
@@ -168,7 +169,13 @@ internal static class OdsWriter
 
         var number = cell.Value ?? (cell.IsNumber && double.TryParse(cell.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) ? parsed : null);
         string? dataStyle = null;
-        if (cell.IsBoolean && number is { } flag)
+        if (cell.IsError)
+        {
+            // Match Calc's explicit cached-error marker while remaining a
+            // string value for ODF readers that do not support the extension.
+            sb.Append(" office:value-type=\"string\" calcext:value-type=\"error\"");
+        }
+        else if (cell.IsBoolean && number is { } flag)
         {
             sb.Append(CultureInfo.InvariantCulture, $" office:value-type=\"boolean\" office:boolean-value=\"{(flag != 0 ? "true" : "false")}\"");
         }

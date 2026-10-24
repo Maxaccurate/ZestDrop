@@ -123,9 +123,6 @@ internal static class XlsxWriter
         sb.Append("</cols>");
     }
 
-    private static bool IsErrorText(string? text) =>
-        text is "#DIV/0!" or "#N/A" or "#VALUE!" or "#REF!" or "#NAME?" or "#NUM!" or "#NULL!" or "#SPILL!" or "#CALC!";
-
     private static void Cell(StringBuilder sb, string reference, SheetCell cell, StyleTable styles)
     {
         var number = cell.Value ?? (cell.IsNumber && double.TryParse(cell.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) ? parsed : null);
@@ -138,7 +135,7 @@ internal static class XlsxWriter
             var flag = number is { } n ? (n != 0 ? 1 : 0) : (cell.Text.Equals("TRUE", StringComparison.OrdinalIgnoreCase) ? 1 : 0);
             sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"b\">{f}<v>{flag}</v></c>");
         }
-        else if (cell.IsError || IsErrorText(cell.Text))
+        else if (cell.IsError)
         {
             sb.Append(CultureInfo.InvariantCulture, $"<c r=\"{reference}\"{s} t=\"e\">{f}<v>{Escape(cell.Text)}</v></c>");
         }

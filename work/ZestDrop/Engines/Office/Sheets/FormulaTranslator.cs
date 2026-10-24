@@ -1,149 +1,153 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ZestDrop.Engines.Office.Sheets;
 
-internal static partial class FormulaTranslator
+internal static class FormulaTranslator
 {
-    private static readonly Regex StringLiteralRegex = new("\"[^\"]*\"", RegexOptions.Compiled);
+    // Match references only at token boundaries. Quoted identifiers retain their
+    // doubled apostrophes; Unicode letters/marks are valid in unquoted sheet names.
+    private const string Sheet = @"(?:'(?:[^']|'')+'|[\p{L}\p{M}\p{N}_\\][\p{L}\p{M}\p{N}_.\\]*)";
+    private const string Cell = @"\$?[A-Za-z]{1,3}\$?[1-9][0-9]*";
+    private static readonly Regex ExcelReference = new(
+        @"(?<![\p{L}\p{M}\p{N}_.\\$!'])" +
+        @"(?:(?<sheet1>" + Sheet + @")!)?(?<cell1>" + Cell + @")" +
+        @"(?::(?:(?<sheet2>" + Sheet + @")!)?(?<cell2>" + Cell + @"))?" +
+        @"(?![\p{L}\p{M}\p{N}_.\\]|\s*\()", RegexOptions.Compiled);
 
-    private static readonly Regex ExcelRefRegex = new(
-        @"(?<![A-Za-z0-9_.\$])(?:(?:'([^']+)'|([A-Za-z0-9_]+))!)?(\$?[A-Za-z]{1,3}\$?[1-9][0-9]*)(?::(?:(?:'([^']+)'|([A-Za-z0-9_]+))!)?(\$?[A-Za-z]{1,3}\$?[1-9][0-9]*))?(?![A-Za-z0-9_]|\s*\()",
-        RegexOptions.Compiled);
-
-    private static readonly Regex OpenFormulaBracketRegex = new(@"\[([^\[\]]+)\]", RegexOptions.Compiled);
-
-    /// <summary>
-    /// Translates an Excel formula (e.g. "SUM(A1:A2)", "IF(A1>0,A1,0)") to OpenFormula syntax
-    /// (e.g. "of:=SUM([.A1:.A2])", "of:=IF([.A1]>0;[.A1];0)").
-    /// </summary>
     public static string ToOpenFormula(string excelFormula)
     {
-        if (string.IsNullOrWhiteSpace(excelFormula)) return "";
-        var f = excelFormula.Trim();
-        if (f.StartsWith("of:=", StringComparison.OrdinalIgnoreCase)) return f;
-        if (f.StartsWith("oooc:=", StringComparison.OrdinalIgnoreCase)) return "of:=" + f[6..];
-        if (f.StartsWith('=')) f = f[1..];
-
-        // Mask string literals
-        var strings = new List<string>();
-        var masked = StringLiteralRegex.Replace(f, m =>
+        var f = Body(excelFormula);
+        if (f.Length == 0) return "";
+        if (excelFormula.TrimStart().StartsWith("of:=", StringComparison.OrdinalIgnoreCase)) return "of:=" + f;
+        var output = new StringBuilder("of:=");
+        int arrays = 0;
+        for (int i = 0; i < f.Length;)
         {
-            strings.Add(m.Value);
-            return $"\0{strings.Count - 1}\0";
-        });
-
-        // Translate cell and range references
-        masked = ExcelRefRegex.Replace(masked, m =>
-        {
-            var s1 = !string.IsNullOrEmpty(m.Groups[1].Value) ? m.Groups[1].Value : (m.Groups[2].Success ? m.Groups[2].Value : null);
-            var c1 = m.Groups[3].Value;
-            var s2 = !string.IsNullOrEmpty(m.Groups[4].Value) ? m.Groups[4].Value : (m.Groups[5].Success ? m.Groups[5].Value : null);
-            var c2 = m.Groups[6].Success ? m.Groups[6].Value : null;
-
-            if (!string.IsNullOrEmpty(c2))
+            if (f[i] == '"')
             {
-                if (!string.IsNullOrEmpty(s1))
-                {
-                    var p1 = m.Groups[1].Success ? $"'{s1}'." : $"{s1}.";
-                    var p2 = m.Groups[4].Success ? $"'{s2}'." : (!string.IsNullOrEmpty(s2) ? $"{s2}." : p1);
-                    return $"[{p1}{c1}:{p2}{c2}]";
-                }
-                return $"[.{c1}:.{c2}]";
+                int end = QuotedEnd(f, i, '"');
+                output.Append(f, i, end - i);
+                i = end;
+                continue;
             }
-            else
+            var reference = ExcelReference.Match(f, i);
+            if (reference.Success && reference.Index == i)
             {
-                if (!string.IsNullOrEmpty(s1))
-                {
-                    var p1 = m.Groups[1].Success ? $"'{s1}'." : $"{s1}.";
-                    return $"[{p1}{c1}]";
-                }
-                return $"[.{c1}]";
+                var sheet1 = reference.Groups["sheet1"].Value;
+                var sheet2 = reference.Groups["sheet2"].Success ? reference.Groups["sheet2"].Value : sheet1;
+                output.Append('[').Append(sheet1).Append('.').Append(reference.Groups["cell1"].Value);
+                if (reference.Groups["cell2"].Success)
+                    output.Append(':').Append(sheet2).Append('.').Append(reference.Groups["cell2"].Value);
+                output.Append(']');
+                i += reference.Length;
+                continue;
             }
-        });
-
-        // Replace , with ; outside strings and brackets
-        var sb = new StringBuilder(masked.Length);
-        bool inBracket = false;
-        foreach (var ch in masked)
-        {
-            if (ch == '[') { inBracket = true; sb.Append(ch); }
-            else if (ch == ']') { inBracket = false; sb.Append(ch); }
-            else if (ch == ',' && !inBracket) { sb.Append(';'); }
-            else { sb.Append(ch); }
+            if (f[i] == '\'')
+            {
+                // A quoted sheet-local named expression is not an A1 reference.
+                // Preserve its identifier as a token rather than editing its text.
+                int end = QuotedEnd(f, i, '\'');
+                output.Append(f, i, end - i);
+                i = end;
+                continue;
+            }
+            char ch = f[i++];
+            if (ch == '{') arrays++;
+            else if (ch == '}') arrays--;
+            if (ch == ',') output.Append(';');
+            else if (ch == ';' && arrays > 0) output.Append('|');
+            else output.Append(ch);
         }
-        var result = sb.ToString();
-
-        // Restore string literals
-        for (int i = 0; i < strings.Count; i++)
-            result = result.Replace($"\0{i}\0", strings[i]);
-
-        return "of:=" + result;
+        return output.ToString();
     }
 
-    /// <summary>
-    /// Translates an OpenFormula string (e.g. "of:=SUM([.A1:.A2])", "of:=IF([.A1]>0;[.A1];0)")
-    /// to Excel formula syntax (e.g. "SUM(A1:A2)", "IF(A1>0,A1,0)").
-    /// </summary>
     public static string ToExcelFormula(string openFormula)
     {
-        if (string.IsNullOrWhiteSpace(openFormula)) return "";
-        var f = openFormula.Trim();
-        if (f.StartsWith("of:=", StringComparison.OrdinalIgnoreCase)) f = f[4..];
-        else if (f.StartsWith("oooc:=", StringComparison.OrdinalIgnoreCase)) f = f[6..];
-        else if (f.StartsWith('=')) f = f[1..];
-
-        // Mask string literals
-        var strings = new List<string>();
-        var masked = StringLiteralRegex.Replace(f, m =>
+        var f = Body(openFormula);
+        var output = new StringBuilder();
+        int arrays = 0;
+        for (int i = 0; i < f.Length;)
         {
-            strings.Add(m.Value);
-            return $"\0{strings.Count - 1}\0";
-        });
-
-        // Replace parameter separators ; with ,
-        masked = masked.Replace(';', ',');
-
-        // Convert [...] OpenFormula references to Excel syntax
-        masked = OpenFormulaBracketRegex.Replace(masked, m =>
-        {
-            var content = m.Groups[1].Value.Trim();
-            if (content.Contains(':'))
+            char ch = f[i];
+            if (ch is '"' or '\'')
             {
-                var parts = content.Split(':', 2);
-                var c1 = ConvertPart(parts[0]);
-                var c2 = ConvertPart(parts[1]);
-                if (c1.Contains('!') && c2.Contains('!'))
-                {
-                    var s1 = c1.Split('!', 2);
-                    var s2 = c2.Split('!', 2);
-                    if (s1[0] == s2[0]) return $"{s1[0]}!{s1[1]}:{s2[1]}";
-                }
-                return $"{c1}:{c2}";
+                int end = QuotedEnd(f, i, ch);
+                output.Append(f, i, end - i);
+                i = end;
+                continue;
             }
-            return ConvertPart(content);
-        });
-
-        // Restore string literals
-        for (int i = 0; i < strings.Count; i++)
-            masked = masked.Replace($"\0{i}\0", strings[i]);
-
-        return masked;
+            if (ch == '[')
+            {
+                int end = FindOutsideQuotes(f, ']', i + 1);
+                if (end < 0) throw new FormatException("The OpenFormula reference is not closed.");
+                output.Append(ToExcelReference(f[(i + 1)..end]));
+                i = end + 1;
+                continue;
+            }
+            if (ch == '{') arrays++;
+            else if (ch == '}') arrays--;
+            output.Append(ch == ';' ? ',' : ch == '|' && arrays > 0 ? ';' : ch);
+            i++;
+        }
+        return output.ToString();
     }
 
-    private static string ConvertPart(string p)
+    private static string Body(string formula)
     {
-        p = p.Trim();
-        if (p.StartsWith('.')) return p[1..];
-        var dotIndex = p.LastIndexOf('.');
-        if (dotIndex > 0)
+        var f = formula?.Trim() ?? "";
+        if (f.StartsWith("of:=", StringComparison.OrdinalIgnoreCase)) return f[4..];
+        if (f.StartsWith("oooc:=", StringComparison.OrdinalIgnoreCase)) return f[6..];
+        return f.StartsWith('=') ? f[1..] : f;
+    }
+
+    private static string ToExcelReference(string reference)
+    {
+        int colon = FindOutsideQuotes(reference, ':');
+        if (colon < 0) return ToExcelPart(reference);
+        var first = ToExcelPart(reference[..colon]);
+        var second = ToExcelPart(reference[(colon + 1)..]);
+        int bang1 = FindOutsideQuotes(first, '!');
+        int bang2 = FindOutsideQuotes(second, '!');
+        if (bang1 >= 0 && bang2 >= 0 && first[..bang1] == second[..bang2])
+            second = second[(bang2 + 1)..];
+        return first + ":" + second;
+    }
+
+    private static string ToExcelPart(string part)
+    {
+        part = part.Trim();
+        if (part.StartsWith('.')) return part[1..];
+        int dot = FindOutsideQuotes(part, '.', last: true);
+        if (dot < 0) return part;
+        var sheet = part[..dot];
+        if (sheet.StartsWith('$')) sheet = sheet[1..];
+        return sheet + "!" + part[(dot + 1)..];
+    }
+
+    // Both formula strings and sheet names escape a quote by doubling it.
+    private static int QuotedEnd(string text, int start, char quote)
+    {
+        for (int i = start + 1; i < text.Length; i++)
         {
-            var sheet = p[..dotIndex];
-            var cell = p[(dotIndex + 1)..];
-            return $"{sheet}!{cell}";
+            if (text[i] != quote) continue;
+            if (i + 1 < text.Length && text[i + 1] == quote) { i++; continue; }
+            return i + 1;
         }
-        return p;
+        throw new FormatException("The formula contains an unterminated quoted token.");
+    }
+
+    private static int FindOutsideQuotes(string text, char separator, int start = 0, bool last = false)
+    {
+        int found = -1;
+        for (int i = start; i < text.Length; i++)
+        {
+            if (text[i] is '"' or '\'') { i = QuotedEnd(text, i, text[i]) - 1; continue; }
+            if (text[i] != separator) continue;
+            if (!last) return i;
+            found = i;
+        }
+        return found;
     }
 }
