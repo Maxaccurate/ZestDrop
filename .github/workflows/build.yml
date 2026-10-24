@@ -24,3 +24,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Progress lifecycle checks failed.' }
           dotnet run --project work/UiControlsChecks -- outputs/ui-controls
           if ($LASTEXITCODE -ne 0) { throw 'Selection and slider controls failed.' }
+          dotnet run --project work/EngineChecks
+          if ($LASTEXITCODE -ne 0) { throw 'Engine regression checks failed.' }
+

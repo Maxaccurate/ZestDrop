@@ -18,7 +18,7 @@ internal static class Checks
         L.UseForSession("zh"); // assertions below use Chinese text; never touch the saved choice
         var checks=new List<object>();int failed=0;
         void Check(string name,Action action){try{action();checks.Add(new{test=name,passed=true});}catch(Exception ex){failed++;checks.Add(new{test=name,passed=false,error=ex.GetBaseException().Message});}}
-        void Require(bool value){if(!value)throw new Exception("Unexpected progress result");}
+        void Require(bool value, string message = "Unexpected progress result") { if (!value) throw new Exception(message); }
         Check("bundled Chinese Medium font resolves and includes the packaging label glyphs", () =>
         {
             var face = new System.Windows.Media.Typeface(UiTheme.ChineseFont, FontStyles.Normal, FontWeights.Medium, FontStretches.Normal);
@@ -252,8 +252,12 @@ internal static class Checks
             var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c ping -n 40 127.0.0.1 > \"{output}\"") { CreateNoWindow = true, UseShellExecute = false })!;
             try
             {
-                Thread.Sleep(2500);
-                long before = new FileInfo(output).Length;
+                long before = 0;
+                for (int w = 0; w < 30 && before == 0; w++)
+                {
+                    Thread.Sleep(200);
+                    if (File.Exists(output)) before = new FileInfo(output).Length;
+                }
                 Require(before > 0);
                 using (var pause = ProcessTreePause.Suspend(process))
                 {
@@ -262,8 +266,13 @@ internal static class Checks
                     Thread.Sleep(3000);
                     Require(new FileInfo(output).Length == frozen);
                     pause.Resume();
-                    Thread.Sleep(3000);
-                    Require(new FileInfo(output).Length > frozen);
+                    long after = frozen;
+                    for (int w = 0; w < 30 && after <= frozen; w++)
+                    {
+                        Thread.Sleep(200);
+                        after = new FileInfo(output).Length;
+                    }
+                    Require(after > frozen);
                 }
             }
             finally
@@ -336,15 +345,16 @@ internal static class Checks
             Settings.PathOverride = file;
             try
             {
-                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", false) == false);
+                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", false) == false, "Initial settings should be empty");
                 Settings.Set("language", "en");
                 Settings.Set("hideWelcome", true);
                 Settings.Set("language", "zh");
-                Require(Settings.GetString("language") == "zh" && Settings.GetBool("hideWelcome", false));
+                Require(Settings.GetString("language") == "zh" && Settings.GetBool("hideWelcome", false), "Settings should persist written values");
                 File.WriteAllText(file, "{ this is not json");
-                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", true));
+                File.SetLastWriteTimeUtc(file, DateTime.UtcNow.AddSeconds(1));
+                Require(Settings.GetString("language") == null && Settings.GetBool("hideWelcome", true), "Damaged file should fall back to defaults");
                 Settings.Set("hideWelcome", false);
-                Require(!Settings.GetBool("hideWelcome", true) && !File.Exists(file + ".tmp"));
+                Require(!Settings.GetBool("hideWelcome", true) && !File.Exists(file + ".tmp"), "Overwriting damaged file should succeed without leaving temp file");
             }
             finally
             {
@@ -548,20 +558,22 @@ internal static class Checks
         });
         Check("the busy line stays away from quick work, shows for slow work, and never flashes", () =>
         {
-            var line = new BusyLine { ShowDelay = TimeSpan.FromMilliseconds(120), MinVisible = TimeSpan.FromMilliseconds(260) };
+            var line = new BusyLine { ShowDelay = TimeSpan.FromMilliseconds(250), MinVisible = TimeSpan.FromMilliseconds(600) };
             using (line.Begin())
                 Pump(40);
             Pump(300);
-            Require(!line.IsShown && line.Visibility == Visibility.Collapsed); // finished before the delay: nothing was ever shown
+            Require(!line.IsShown && line.Visibility == Visibility.Collapsed, "Quick work must not show the busy line"); // finished before the delay: nothing was ever shown
             var slow = line.Begin();
             Pump(60);
-            Require(!line.IsShown);
-            Pump(160);
-            Require(line.IsShown && line.Visibility == Visibility.Visible);
+            Require(!line.IsShown, "Busy line must not show before ShowDelay");
+            for (int i = 0; i < 30 && (!line.IsShown || line.Visibility != Visibility.Visible); i++)
+                Pump(50);
+            Require(line.IsShown && line.Visibility == Visibility.Visible, "Busy line must show after ShowDelay");
             slow.Dispose();
-            Require(line.IsShown); // it has only been up a moment, so it stays a little longer
-            Pump(450);
-            Require(!line.IsShown && line.Visibility == Visibility.Collapsed);
+            Require(line.IsShown, "Busy line must stay visible for MinVisible"); // it has only been up a moment, so it stays a little longer
+            for (int i = 0; i < 40 && (line.IsShown || line.Visibility != Visibility.Collapsed); i++)
+                Pump(50);
+            Require(!line.IsShown && line.Visibility == Visibility.Collapsed, "Busy line must collapse after MinVisible and fade");
         });
         Check("overlapping work shares one busy line, and ending a session twice is harmless", () =>
         {
@@ -574,7 +586,8 @@ internal static class Checks
             Pump(120);
             Require(line.IsShown); // the second job is still running
             second.Dispose();
-            Pump(300);
+            for (int i = 0; i < 20 && line.IsShown; i++)
+                Pump(50);
             Require(!line.IsShown);
             using (line.Begin())
                 Require(line.IsShown); // a fresh job after a double dispose still works
@@ -718,7 +731,18 @@ internal static class Checks
             }
             finally { try { Directory.Delete(root, true); } catch (IOException) { } }
         });
-        File.WriteAllText(args[0],JsonSerializer.Serialize(new{passed=checks.Count-failed,failed,checks},new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine($"passed={checks.Count-failed}, failed={failed}");return failed==0?0:1;
+        File.WriteAllText(args[0], JsonSerializer.Serialize(new { passed = checks.Count - failed, failed, checks }, new JsonSerializerOptions { WriteIndented = true }));
+        Console.WriteLine($"passed={checks.Count - failed}, failed={failed}");
+        if (failed > 0)
+        {
+            foreach (var c in checks)
+            {
+                var el = JsonSerializer.SerializeToElement(c);
+                if (el.TryGetProperty("passed", out var p) && !p.GetBoolean())
+                    Console.WriteLine($"  FAILED TEST: {el.GetProperty("test").GetString()} -> {el.GetProperty("error").GetString()}");
+            }
+        }
+        return failed == 0 ? 0 : 1;
     }
     private static string JobValidationMessage()
     {

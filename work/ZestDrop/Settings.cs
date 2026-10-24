@@ -12,7 +12,7 @@ internal static class Settings
     public static string? PathOverride
     {
         get => pathOverride;
-        set { lock (Sync) { pathOverride = value; cache = null; } }
+        set { lock (Sync) { pathOverride = value; cache = null; cacheStamp = default; cacheLength = -1; } }
     }
     private static string? pathOverride;
 
@@ -21,6 +21,7 @@ internal static class Settings
     // parsed file is kept in memory and only read again after it changed on disk.
     private static JsonObject? cache;
     private static DateTime cacheStamp;
+    private static long cacheLength = -1;
 
     private static string FilePath => PathOverride ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZestDrop", "settings.json");
 
@@ -42,14 +43,32 @@ internal static class Settings
 
     private static JsonObject Read()
     {
-        DateTime stamp = File.GetLastWriteTimeUtc(FilePath);
-        if (cache != null && stamp == cacheStamp)
-            return cache;
         try
-        { cache = JsonNode.Parse(File.ReadAllText(FilePath)) as JsonObject ?? new JsonObject(); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { cache = new JsonObject(); }
-        cacheStamp = stamp;
-        return cache;
+        {
+            var info = new FileInfo(FilePath);
+            if (!info.Exists)
+            {
+                cache = new JsonObject();
+                cacheStamp = default;
+                cacheLength = -1;
+                return cache;
+            }
+            DateTime stamp = info.LastWriteTimeUtc;
+            long length = info.Length;
+            if (cache != null && stamp == cacheStamp && length == cacheLength)
+                return cache;
+            cache = JsonNode.Parse(File.ReadAllText(FilePath)) as JsonObject ?? new JsonObject();
+            cacheStamp = stamp;
+            cacheLength = length;
+            return cache;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            cache = new JsonObject();
+            cacheStamp = default;
+            cacheLength = -1;
+            return cache;
+        }
     }
 
     private static void Write(string key, JsonNode? value)
@@ -65,6 +84,10 @@ internal static class Settings
                 string temp = FilePath + ".tmp";
                 File.WriteAllText(temp, settings.ToJsonString());
                 File.Move(temp, FilePath, true);
+                var info = new FileInfo(FilePath);
+                cache = settings;
+                cacheStamp = info.LastWriteTimeUtc;
+                cacheLength = info.Length;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
         }

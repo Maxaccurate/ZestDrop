@@ -19,6 +19,18 @@ internal static class OutputFolder
     public static void Choose(string? folder) => Settings.Set(Key, folder ?? "");
 
     // A job can carry its own folder (watch folders write to a sub-folder so their results are never picked up again).
-    public static string? For(ConversionJob job) =>
-        job.Parameters != null && job.Parameters.TryGetValue("_outputDir", out string? own) && Directory.Exists(own) ? own : Current;
+    public static string? For(ConversionJob job)
+    {
+        if (job.Parameters != null && job.Parameters.TryGetValue("_outputDir", out string? own) && !string.IsNullOrWhiteSpace(own))
+        {
+            try
+            {
+                if (!Directory.Exists(own))
+                    Directory.CreateDirectory(own);
+                return own;
+            }
+            catch { }
+        }
+        return Current;
+    }
 }

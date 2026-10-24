@@ -9,11 +9,37 @@ namespace ZestDrop;
 
 internal static class Backend
 {
+    public static string ResolvePython(string baseDir)
+    {
+        string local = Path.Combine(baseDir, "runtime", "python", "python.exe");
+        if (File.Exists(local)) return local;
+
+        // Try repo outputs
+        string repoRuntime = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "outputs", "ZestDrop", "runtime", "python", "python.exe"));
+        if (File.Exists(repoRuntime)) return repoRuntime;
+
+        return local;
+    }
+
+    public static string ResolveWorker(string baseDir)
+    {
+        string local = Path.Combine(baseDir, "backend", "worker.py");
+        if (File.Exists(local)) return local;
+
+        // Try repo work/ZestDrop/backend
+        string repoWorker = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "backend", "worker.py"));
+        if (File.Exists(repoWorker)) return repoWorker;
+
+        return local;
+    }
+
     public static ProcessStartInfo StartInfo(params string[] arguments)
     {
         string baseDir = AppContext.BaseDirectory;
-        var info = new ProcessStartInfo(Path.Combine(baseDir, "runtime", "python", "python.exe")) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true, WorkingDirectory = baseDir };
-        info.ArgumentList.Add(Path.Combine(baseDir, "backend", "worker.py"));
+        string pythonExe = ResolvePython(baseDir);
+        string workerPy = ResolveWorker(baseDir);
+        var info = new ProcessStartInfo(pythonExe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true, WorkingDirectory = baseDir };
+        info.ArgumentList.Add(workerPy);
         // Messages from the engine (errors, page headings in text exports) follow the app's language.
         info.Environment["ZESTDROP_LANG"] = L.Language;
         // The Store installs the app into a read-only folder, so Python must not write bytecode caches next to its libraries.
@@ -27,9 +53,18 @@ internal static class Backend
             info.ArgumentList.Add(arg);
         return info;
     }
+    public static Func<string, bool>? NativeHandlerCanHandle { get; set; }
+    public static Func<string, string, CancellationToken, IProgress<JobProgress>?, Task>? NativeHandlerExecute { get; set; }
+
     // jobToken tags the worker's staging files, so cleaning up after a cancel touches only this job's files.
     public static async Task Run(string[] arguments, CancellationToken cancellation = default, Action<Process>? onStart = null, IProgress<JobProgress>? progress = null, string? jobToken = null)
     {
+        if (arguments.Length >= 3 && arguments[0] == "--job" && File.Exists(arguments[1]) && NativeHandlerCanHandle?.Invoke(arguments[1]) == true && NativeHandlerExecute != null)
+        {
+            await NativeHandlerExecute(arguments[1], arguments[2], cancellation, progress);
+            return;
+        }
+
         using var watch = arguments.Length >= 3 && arguments[0] == "--job" ? WatchProgress(arguments[2], progress) : null;
         var start = StartInfo(arguments);
         if (jobToken != null)

@@ -87,31 +87,72 @@ internal static class Catalog
     public static string Extension(string path)
     {
         string ext = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
-        return ext switch { "jpeg" => "jpg", "tif" => "tiff", "heif" => "heic", "aif" => "aiff", "tgz" => "gz", _ => ext };
+        return ext switch { "jpeg" => "jpg", "tif" => "tiff", "heif" => "heic", "aif" => "aiff", "tgz" => "gz", "tbz" => "tar", "tbz2" => "tar", "txz" => "tar", _ => ext };
     }
-    public static readonly string[] Images = ["jpg", "png", "webp", "heic", "tiff", "svg", "avif", "bmp"];
+    public static readonly string[] Images = ["jpg", "png", "webp", "heic", "tiff", "svg", "avif", "bmp", "icns"];
     public static readonly string[] Audio = ["mp3", "m4a", "wav", "flac", "ogg", "opus", "aiff", "wma"];
     public static readonly string[] Video = ["mp4", "mov", "mkv", "webm", "avi", "wmv"];
-    public static readonly string[] Archives = ["zip", "tar", "gz", "rar", "7z"];
+    public static readonly string[] Archives = ["zip", "tar", "gz", "rar", "7z", "tgz", "tbz", "tbz2", "txz"];
     public static readonly string[] OfficeSlides = ["ppt", "pptx", "pptm", "pps", "ppsx", "odp"];
     public static readonly string[] OfficeWords = ["doc", "docx", "docm", "rtf", "odt"];
     public static readonly string[] OfficeSheets = ["xls", "xlsx", "xlsm", "xlsb", "ods", "csv", "tsv"];
-    private static readonly string[] ImageTargets = ["jpg", "png", "webp", "heic", "tiff", "avif", "bmp", "pdf"];
+    public static readonly string[] Models3D = ["glb", "gltf", "stl", "obj", "3mf", "ply", "fbx"];
+    public static readonly string[] CadFormats = ["dwg", "dxf"];
+    public static readonly string[] Fonts = ["ttf", "otf", "woff", "woff2", "eot"];
+    public static readonly string[] DataTrees = ["json", "jsonl", "yaml", "toml", "xml", "vcf"];
+    public static readonly string[] Ebooks = ["epub", "kepub", "mobi", "azw3", "azw", "prc", "fb2", "htmlz", "txtz", "azw4"];
+    public static readonly string[] Comics = ["cbz", "cbr", "cb7", "cbt", "cbc"];
+    public static readonly string[] Emails = ["eml", "msg"];
+    public static readonly string[] Subtitles = ["srt", "vtt", "ass", "ssa", "smi", "sami", "lrc", "ttml", "dfxp", "sub", "scc"];
+    private static readonly string[] ImageTargets = ["jpg", "png", "webp", "heic", "tiff", "avif", "bmp", "pdf", "svg", "icns"];
+    private static readonly string[] SubtitleTargets = ["srt", "vtt", "ass", "smi", "lrc", "ttml", "sub"];
+    private static readonly string[] Model3DTargets = ["glb", "gltf", "stl", "obj", "3mf", "ply", "png", "jpg"];
+    private static readonly string[] CadTargets = ["dwg", "dxf", "pdf", "svg", "png", "jpg"];
     public static string Category(string path)
     {
         string ext = Extension(path);
-        return Images.Contains(ext) ? "image" : Audio.Contains(ext) ? "audio" : Video.Contains(ext) || ext == "gif" ? "video" : OfficeSlides.Contains(ext) || OfficeWords.Contains(ext) || OfficeSheets.Contains(ext) ? "office" : new[] { "pdf", "txt", "srt", "vtt" }.Contains(ext) ? "document" : Archives.Contains(ext) ? "archive" : "file";
+        return Images.Contains(ext) ? "image" : Audio.Contains(ext) ? "audio" : Video.Contains(ext) || ext == "gif" ? "video" : OfficeSlides.Contains(ext) || OfficeWords.Contains(ext) || OfficeSheets.Contains(ext) ? "office" : Subtitles.Contains(ext) ? "subtitle" : new[] { "pdf", "txt", "md", "html" }.Contains(ext) ? "document" : Models3D.Contains(ext) ? "model3d" : CadFormats.Contains(ext) ? "cad" : Fonts.Contains(ext) ? "font" : DataTrees.Contains(ext) ? "data" : Ebooks.Contains(ext) ? "ebook" : Comics.Contains(ext) ? "comic" : Emails.Contains(ext) ? "email" : Archives.Contains(ext) ? "archive" : "file";
     }
     public static bool PackingOnly(string[] paths) => paths.Length > 0 && paths.All(path => Directory.Exists(path) || Category(path) == "file");
-    private static string[] Targets(string ext)
+    internal static string[] Targets(string ext)
     {
         if (OfficeSlides.Contains(ext))
-            return OfficeBridge.Available("PowerPoint") ? ["pdf", "png", "jpg", "txt", "pptx", "ppt", "odp"] : new[] { "pptx", "pptm", "ppsx" }.Contains(ext) ? ["txt"] : [];
+            return OfficeBridge.Available("PowerPoint")
+                ? ["pdf", "png", "jpg", "txt", "docx", "md", "html", "pptx", "ppt", "odp"]
+                : ["docx", "md", "txt", "html", "pptx", "pptm", "potx", "ppsx"];
         if (OfficeWords.Contains(ext))
-            return OfficeBridge.Available("Word") ? ["pdf", "png", "jpg", "txt", "docx", "doc", "rtf", "odt", "html"] : new[] { "docx", "docm" }.Contains(ext) ? ["txt"] : [];
+            return OfficeBridge.Available("Word")
+                ? ["pdf", "png", "jpg", "txt", "docx", "doc", "rtf", "odt", "html", "md"]
+                : ["docx", "docm", "dotx", "dotm", "txt", "md", "html"];
         if (OfficeSheets.Contains(ext))
-            return OfficeBridge.Available("Excel") ? ["pdf", "png", "jpg", "xlsx", "xls", "ods", "csv", "tsv", "json", "txt"] : ext is "xlsx" or "xlsm" ? ["csv", "tsv", "json", "txt"] : ext is "csv" or "tsv" ? ["xlsx", "csv", "tsv", "json", "txt"] : [];
-        return ext is "jpg" or "png" ? [.. ImageTargets, "docx"] : Images.Contains(ext) ? ImageTargets : Audio.Contains(ext) ? Audio : Video.Contains(ext) ? [.. Video, "gif", "mp3"] : ext == "gif" ? Video : ext == "pdf" ? ["docx", "jpg", "png", "txt"] : ext == "txt" ? ["pdf", "jpg", "png", "srt", "vtt"] : ext is "srt" or "vtt" ? ["srt", "vtt", "txt"] : Archives;
+            return OfficeBridge.Available("Excel")
+                ? ["pdf", "png", "jpg", "xlsx", "xls", "ods", "csv", "tsv", "json", "yaml", "toml", "xml", "txt", "docx"]
+                : ["xlsx", "xlsm", "xltx", "xls", "ods", "csv", "tsv", "json", "yaml", "toml", "xml", "txt", "docx"];
+        if (Models3D.Contains(ext))
+            return Model3DTargets.Where(t => t != ext).ToArray();
+        if (CadFormats.Contains(ext))
+            return CadTargets.Where(t => t != ext).ToArray();
+        if (Fonts.Contains(ext))
+            return Fonts.Where(t => t != ext).ToArray();
+        if (DataTrees.Contains(ext))
+            return ((string[])["json", "yaml", "toml", "xml", "csv", "tsv", "xlsx"]).Where(t => t != ext).ToArray();
+        if (Emails.Contains(ext))
+            return ((string[])["eml", "html", "txt", "zip"]).Where(t => t != ext).ToArray();
+        if (Comics.Contains(ext))
+            return ((string[])["pdf", "epub", "cbz"]).Where(t => t != ext).ToArray();
+        if (Subtitles.Contains(ext))
+            return SubtitleTargets.Where(t => t != ext).ToArray();
+        if (ext == "icns")
+            return ((string[])["png", "jpg", "webp", "bmp", "ico"]).ToArray();
+        if (ext == "azw4")
+            return ["pdf"];
+        if (Ebooks.Contains(ext))
+            return ((string[])["epub", "kepub", "txt", "html", "md", "fb2", "htmlz", "txtz", "docx"]).Where(t => t != ext).ToArray();
+        if (ext == "md")
+            return ["docx", "epub", "kepub", "fb2", "htmlz", "txtz", "html", "txt"];
+        if (ext == "html")
+            return ["docx", "txt", "md", "epub", "fb2", "htmlz", "txtz"];
+        return ext is "jpg" or "png" ? [.. ImageTargets, "docx"] : Images.Contains(ext) ? ImageTargets : Audio.Contains(ext) ? Audio : Video.Contains(ext) ? [.. Video, "gif", "mp3"] : ext == "gif" ? Video : ext == "pdf" ? ["docx", "jpg", "png", "txt"] : ext == "txt" ? ["pdf", "jpg", "png", "srt", "vtt", "epub", "fb2", "docx"] : Archives;
     }
     public static List<Operation> Options(string[] paths, bool tools)
     {
@@ -167,7 +208,7 @@ internal static class Catalog
     // What the wheel offers for a kind of file, in its current order, for arranging it (one file and several files together).
     public static List<Operation> Sample(string kind, bool tools)
     {
-        string[] extensions = kind switch { "image" => Images, "video" => Video, "audio" => Audio, "document" => ["pdf", "txt", "srt", "vtt"], _ => Archives };
+        string[] extensions = kind switch { "image" => Images, "video" => Video, "audio" => Audio, "model3d" => Models3D, "cad" => CadFormats, "font" => Fonts, "data" => DataTrees, "ebook" => Ebooks, "comic" => Comics, "email" => Emails, "subtitle" => Subtitles, "document" => ["pdf", "txt", "md", "html"], _ => Archives };
         var all = new List<Operation>();
         foreach (string extension in tools ? extensions.Take(1) : extensions)
             foreach (var paths in new[] { new[] { "x." + extension }, new[] { "x." + extension, "y." + extension } })

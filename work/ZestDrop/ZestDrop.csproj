@@ -21,7 +21,11 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <!-- The app has its own English and Chinese text; the other languages only add .NET framework strings for dialogs it never shows. -->
     <SatelliteResourceLanguages>en;zh-Hans</SatelliteResourceLanguages>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="EngineChecks" />
+  </ItemGroup>
   <!-- Only the Microsoft Store package needs the Windows SDK (for its startup task); it adds about 25 MB. -->
   <PropertyGroup Condition="'$(Store)' == 'true'">
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
@@ -32,5 +36,21 @@
     <EmbeddedResource Include="assets/zestdrop.ico" LogicalName="ZestDrop.AppIcon" />
     <Resource Include="assets/fonts/SourceHanSansCN-Medium.otf" />
     <Content Include="assets/fonts/OFL.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="zestdrop.cmd" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="backend\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ACadSharp" Version="3.8.0" />
+    <PackageReference Include="AngleSharp" Version="1.8.2" />
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+    <PackageReference Include="ExcelNumberFormat" Version="1.1.0" />
+    <PackageReference Include="Markdig" Version="0.40.0" />
+    <PackageReference Include="MimeKitLite" Version="4.10.0" />
+    <PackageReference Include="MsgReader" Version="6.2.0" />
+    <PackageReference Include="SharpCompress" Version="1.0.0" />
+    <PackageReference Include="SharpGLTF.Core" Version="1.0.7" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="Tomlyn" Version="2.10.1" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 </Project>
