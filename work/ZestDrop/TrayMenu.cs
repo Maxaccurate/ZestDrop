@@ -20,7 +20,8 @@ internal sealed class TrayMenuActions
     public Action Customize { get; init; } = () => { };
     public Action ChooseOutput { get; init; } = () => { };
     public Action Explorer { get; init; } = () => { };
-    public Action Startup { get; init; } = () => { };
+    public Action StartupSettings { get; init; } = StartupManager.OpenWindowsSettings;
+    public Action<string> StartupProblem { get; init; } = _ => { };
     public Action Notices { get; init; } = () => { };
     public Action Quit { get; init; } = () => { };
     public Action<string> Reveal { get; init; } = _ => { };
@@ -31,12 +32,14 @@ internal sealed class TrayMenuActions
 internal sealed class TrayMenu : IDisposable
 {
     public Forms.ContextMenuStrip Menu { get; } = new();
+    public Forms.ToolStripMenuItem Welcome { get; }
     public Forms.ToolStripMenuItem Startup { get; }
     public Forms.ToolStripMenuItem? Explorer { get; }
     private readonly Forms.ToolStripMenuItem progress, pause, cancel, recent, latestFolder, emptyRecent, tasks;
     private readonly Forms.ToolStripSeparator recentSeparator;
     private readonly Forms.ToolStripMenuItem sameFolder, otherFolder;
     private readonly TrayMenuActions actions;
+    private readonly StartupMenuBinding startupBinding;
 
     private static TrayMenuItem Item(string text, Action? action = null) =>
         new(L.T(text), null, (_, _) => action?.Invoke());
@@ -49,6 +52,8 @@ internal sealed class TrayMenu : IDisposable
         Menu.ShowItemToolTips = true;
         Menu.Items.Add(new TrayMenuHeader());
         Menu.Items.Add(new Forms.ToolStripSeparator());
+        Welcome = Item("欢迎窗口…", actions.Welcome);
+        Menu.Items.Add(Welcome);
         Menu.Items.Add(Item("处理剪贴板…", actions.Clipboard));
         recent = Item("最近输出");
         latestFolder = Item("打开最近输出文件夹", () => { });
@@ -132,8 +137,9 @@ internal sealed class TrayMenu : IDisposable
             Explorer = Item("资源管理器右键菜单", actions.Explorer);
             settings.DropDownItems.Add(Explorer);
         }
-        Startup = Item("开机自启", actions.Startup);
+        Startup = Item("开机自启");
         settings.DropDownItems.Add(Startup);
+        settings.DropDownItems.Add(Item("Windows 启动应用设置", actions.StartupSettings));
         settings.DropDownOpening += (_, _) =>
         {
             if (Explorer != null) Explorer.Checked = ExplorerIntegration.Enabled;
@@ -148,6 +154,7 @@ internal sealed class TrayMenu : IDisposable
         Menu.Opening += (_, _) => ApplyStyle();
         ApplyStyle();
         Update([], null, 0, false, false);
+        startupBinding = new StartupMenuBinding(Startup, Menu, actions.StartupProblem);
     }
 
     public void Update(IReadOnlyList<string> outputs, string? lastOutput, int jobCount, bool canPause, bool canResume)
@@ -244,7 +251,11 @@ internal sealed class TrayMenu : IDisposable
 
     private void RefreshDropDownStyle(object? sender, System.ComponentModel.CancelEventArgs e) => ApplyStyle();
 
-    public void Dispose() => Menu.Dispose();
+    public void Dispose()
+    {
+        startupBinding.Dispose();
+        Menu.Dispose();
+    }
 }
 
 internal class TrayMenuItem : Forms.ToolStripMenuItem

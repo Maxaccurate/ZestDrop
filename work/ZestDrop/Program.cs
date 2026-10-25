@@ -203,7 +203,6 @@ internal sealed class Resident : IDisposable
     private WheelOrderWindow? orderWindow;
     private readonly EventWaitHandle openRequest = new(false, EventResetMode.AutoReset, ExplorerIntegration.EventName);
 
-    private Forms.ToolStripMenuItem? startupMenu;
     private TrayMenu? trayMenu;
     public Resident(System.Windows.Application app, EventWaitHandle showRequest, bool startupLaunch = false)
     {
@@ -214,7 +213,6 @@ internal sealed class Resident : IDisposable
         trayIcon = AppIcon.CreateTrayIcon();
         tray = new Forms.NotifyIcon { Icon = trayIcon, Visible = true };
         BuildTrayMenu();
-        StartupManager.Changed += RefreshStartupMenu;
         // The tray menu, tooltip and progress stack switch language immediately; open tool windows keep theirs.
         L.Changed += () =>
         {
@@ -377,38 +375,17 @@ internal sealed class Resident : IDisposable
                 catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
                 { Notify(L.T("资源管理器右键菜单"), ex.Message); }
             },
-            Startup = async () =>
-            {
-                var item = startupMenu;
-                if (item == null) return;
-                item.Enabled = false;
-                var result = await StartupManager.SetAsync(!item.Checked);
-                if (disposed || item.IsDisposed) return;
-                item.Checked = result.Enabled;
-                item.Enabled = result.CanChange;
-                if (result.Message != null) Notify(L.T("开机自启"), result.Message);
-            },
+            StartupProblem = message => Notify(L.T("开机自启"), message),
             Notices = OpenNotices,
             Quit = () => app.Shutdown()
         }, ExplorerIntegration.Available);
-        startupMenu = menu.Startup;
         menu.Menu.Opening += (_, _) =>
         {
-            RefreshStartupMenu();
             menu.Update(recent, lastOutput, jobs.Count, jobs.Any(CanPause), jobs.Any(j => j.Pause != null));
         };
         trayMenu = menu;
         tray.ContextMenuStrip = menu.Menu;
         old?.Dispose();
-        RefreshStartupMenu();
-    }
-    private async void RefreshStartupMenu()
-    {
-        var item = startupMenu;
-        var status = await StartupManager.GetAsync();
-        if (disposed || item == null || item.IsDisposed || item != startupMenu) return;
-        item.Checked = status.Enabled; item.Enabled = status.CanChange;
-        item.ToolTipText = status.Message ?? L.T("登录 Windows 后在后台运行，不打开欢迎窗口。");
     }
 
     private void Activate(bool tools, string reason, bool modifier = false)
@@ -742,7 +719,6 @@ internal sealed class Resident : IDisposable
         if (disposed)
             return;
         disposed = true;
-        StartupManager.Changed -= RefreshStartupMenu;
         timer.Stop();
         stopping.Cancel();
         queue.Writer.TryComplete();

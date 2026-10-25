@@ -26,4 +26,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Selection and slider controls failed.' }
           dotnet run --project work/EngineChecks
           if ($LASTEXITCODE -ne 0) { throw 'Engine regression checks failed.' }
+          dotnet run --project work/TrayMenuChecks -- outputs/tray-menu-checks.json
+          if ($LASTEXITCODE -ne 0) { throw 'Tray menu and startup checks failed.' }
 

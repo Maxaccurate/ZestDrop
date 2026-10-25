@@ -615,6 +615,7 @@ internal static partial class L
         ["轮盘"] = "Wheel",
         ["帮助"] = "Help",
         ["使用指南…"] = "Getting started…",
+        ["欢迎窗口…"] = "Welcome window…",
         ["固定菜单（松手不关闭）"] = "Sticky menu (stay open on release)",
         ["固定菜单（松开鼠标按键不关闭，点击选项或空白处关闭）"] = "Sticky menu (keeps the menu open when releasing the mouse button; click an option or outside to close)",
         ["拖动刻度 · 按住 Shift 微调 · 双击归零"] = "Drag the ruler · Shift for fine control · Double-click to reset",
