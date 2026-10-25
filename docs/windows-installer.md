@@ -2,6 +2,8 @@
 
 There are two EXE choices for the same Windows x64 application as the portable bundles. The **2.2 MB online installer** downloads and verifies the complete approximately 156 MB offline installer and then opens its wizard. The **approximately 156 MB offline installer** includes .NET, Python and the conversion libraries, FFmpeg and 7-Zip. Both install the same application, which works offline afterward. Neither adds an automatic updater.
 
+The v1.2.1 installers use the same validated 1,969-file application payload. The offline installer passed 22 lifecycle checks and the online installer passed 16 checks including a real GitHub download/install/uninstall. See [offline validation](validation/v1.2.1-installer.json) and [online validation](validation/v1.2.1-online-installer.json).
+
 ## Install and upgrade
 
 Download `ZestDrop-v1.2.1-windows-x64-online-setup.exe` or the offline `ZestDrop-v1.2.1-windows-x64-setup.exe` from the [release](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.2.1). Run it and follow the wizard. The installers are unsigned, like the portable executable. The online version shows download progress and checks the downloaded file automatically; there are no separate checksum files to download. If the download fails, retry or use the offline installer. The initial online EXE is smaller, but total download traffic still includes the complete installation package.

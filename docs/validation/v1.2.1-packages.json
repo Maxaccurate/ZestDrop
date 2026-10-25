@@ -1,0 +1,42 @@
+{
+  "version": "1.2.1",
+  "payload_files": 1969,
+  "product_version": "1.2.1+335df8b297be347e329e1fc7562a082db2c9bf55",
+  "zip_crc_and_content_verified": true,
+  "sevenzip_extracted_content_verified": true,
+  "extracted_app_smoke_verified": true,
+  "assets": [
+    {
+      "name": "ZestDrop-v1.2.1-windows-x64.zip",
+      "bytes": 250408705,
+      "sha256": "ea53d2b49993f017b4f08a87ed43cdd2dfa67e29f528d8b964d3976765a3205a"
+    },
+    {
+      "name": "ZestDrop-v1.2.1-windows-x64.7z",
+      "bytes": 152547911,
+      "sha256": "30e1c1eb5177b945868196f7e29260992d9ef7f75d9e75d15ff64d20dae3bde4"
+    },
+    {
+      "name": "ZestDrop-v1.2.1-windows-x64-setup.exe",
+      "bytes": 156249597,
+      "sha256": "7df8a65b8e6fec1d9ff6397c08fd62bcfa91e9b611d468746b44ec7d240a1b2e"
+    },
+    {
+      "name": "ZestDrop-v1.2.1-windows-x64-online-setup.exe",
+      "bytes": 2158425,
+      "sha256": "c27ec26e2605533d038ffe2effc2fab29d623de1b06ca2bd0ac69b9f72d8785f"
+    }
+  ],
+  "date": "2026-10-25",
+  "source_commit": "335df8b297be347e329e1fc7562a082db2c9bf55",
+  "all_server_asset_digests_match": true,
+  "release_ui_render_languages": [
+    "zh",
+    "en",
+    "ar"
+  ],
+  "release_ui_render_themes": [
+    "light",
+    "dark"
+  ]
+}

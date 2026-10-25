@@ -1,0 +1,106 @@
+{
+  "passed": 22,
+  "failed": 0,
+  "payload_files": 1969,
+  "checks": [
+    {
+      "name": "Refuses a nonempty unrelated installation folder",
+      "passed": true
+    },
+    {
+      "name": "Installs without administrator privileges into a Unicode path",
+      "passed": true
+    },
+    {
+      "name": "All installed payload files match the packaged manifest",
+      "passed": true
+    },
+    {
+      "name": "Registers version in per-user Installed apps",
+      "passed": true
+    },
+    {
+      "name": "Creates a Start menu shortcut",
+      "passed": true
+    },
+    {
+      "name": "Installation preserves existing startup and Explorer preferences",
+      "passed": true
+    },
+    {
+      "name": "Installed application executes convert:jpg",
+      "passed": true
+    },
+    {
+      "name": "Installed application executes convert:mp3",
+      "passed": true
+    },
+    {
+      "name": "Background fixture job is active",
+      "passed": true
+    },
+    {
+      "name": "Refuses uninstall while the installed app is processing",
+      "passed": true
+    },
+    {
+      "name": "Refuses upgrade while the installed app is processing",
+      "passed": true
+    },
+    {
+      "name": "Blocked upgrade and uninstall preserve the running job",
+      "passed": true
+    },
+    {
+      "name": "Same-version repair completes successfully",
+      "passed": true
+    },
+    {
+      "name": "Repair restores missing and modified files while preserving user-created files",
+      "passed": true
+    },
+    {
+      "name": "Uninstaller exits successfully",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes its files, shortcut and Installed apps entry",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes Python bytecode caches",
+      "passed": true
+    },
+    {
+      "name": "Uninstall removes only integrations pointing to this installation",
+      "passed": true
+    },
+    {
+      "name": "Uninstall preserves settings and user-created files",
+      "passed": true
+    },
+    {
+      "name": "Reinstalls cleanly after uninstall",
+      "passed": true
+    },
+    {
+      "name": "Uninstaller exits successfully",
+      "passed": true
+    },
+    {
+      "name": "A clean installation uninstalls without leaving application files",
+      "passed": true
+    }
+  ],
+  "version": "1.2.1",
+  "date": "2026-10-25",
+  "source_commit": "335df8b297be347e329e1fc7562a082db2c9bf55",
+  "artifact_name": "ZestDrop-v1.2.1-windows-x64-setup.exe",
+  "artifact_bytes": 156249597,
+  "artifact_sha256": "7df8a65b8e6fec1d9ff6397c08fd62bcfa91e9b611d468746b44ec7d240a1b2e",
+  "scope": "Local current-user silent install, repair, runtime conversions, active-job guards, uninstall and reinstall in a Unicode path; preserves settings and existing portable registrations.",
+  "limits": [
+    "Interactive installer wizard not manually driven for this release.",
+    "Other Windows versions and a real sign-in cycle were not manually re-tested."
+  ]
+}

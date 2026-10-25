@@ -30,12 +30,12 @@ Windows 10 version 1809 or later, x64.
 | | Download | Size |
 | --- | --- | --- |
 | **Microsoft Store** | [Get ZestDrop from the Microsoft Store](https://apps.microsoft.com/detail/9NG514X8RQC6) | Installs and updates through the Store |
-| **Online installer** | [ZestDrop-v1.2.1-windows-x64-online-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64-online-setup.exe) | About 2.2 MB to start; downloads the complete offline installer |
-| **Offline installer** | [ZestDrop-v1.2.1-windows-x64-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64-setup.exe) | About 156 MB |
-| **Portable 7z** | [ZestDrop-v1.2.1-windows-x64.7z](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64.7z) | About 155 MB |
-| **Portable ZIP** | [ZestDrop-v1.2.1-windows-x64.zip](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64.zip) | About 251 MB |
+| **Online installer** | [ZestDrop-v1.2.1-windows-x64-online-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64-online-setup.exe) | 2.2 MB to start; downloads and verifies the 156.2 MB installer |
+| **Offline installer** | [ZestDrop-v1.2.1-windows-x64-setup.exe](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64-setup.exe) | 156.2 MB |
+| **Portable 7z** | [ZestDrop-v1.2.1-windows-x64.7z](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64.7z) | 152.5 MB |
+| **Portable ZIP** | [ZestDrop-v1.2.1-windows-x64.zip](https://github.com/Maxaccurate/ZestDrop/releases/download/v1.2.1/ZestDrop-v1.2.1-windows-x64.zip) | 250.4 MB |
 
-All GitHub downloads contain the same complete application. The installers install for the current user (no administrator rights), add a Start menu shortcut and an uninstaller, and offer an optional desktop shortcut. For a portable bundle, extract the whole archive and run `ZestDrop.exe` from the `ZestDrop` folder; keep `backend`, `runtime` and the DLLs next to it.
+All GitHub download options provide the same complete application; the online installer downloads the offline package during setup. The installers install for the current user (no administrator rights), add a Start menu shortcut and an uninstaller, and offer an optional desktop shortcut. For a portable bundle, extract the whole archive and run `ZestDrop.exe` from the `ZestDrop` folder; keep `backend`, `runtime` and the DLLs next to it.
 
 The GitHub builds are unsigned, so Windows SmartScreen may warn on first launch. See the [release notes](https://github.com/Maxaccurate/ZestDrop/releases/tag/v1.2.1) and [installation and packaging](docs/windows-installer.md) for upgrades and uninstalling.
 
