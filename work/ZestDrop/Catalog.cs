@@ -68,9 +68,12 @@ internal static class Catalog
             return null;
         var groups = new List<ToolGroup>();
         var placed = new HashSet<string>();
+        bool customized = operations.Any(o => o.Recent) || SavedOrder(kind, true).Any(id => operations.Any(o => o.Id == id));
+        int Position(Operation operation) => operations.FindIndex(o => o.Id == operation.Id);
         void Add(string label, IEnumerable<Operation> items)
         {
             var list = items.ToList();
+            if (customized) list = list.OrderBy(Position).ToList();
             if (list.Count == 0)
                 return;
             groups.Add(new ToolGroup(L.T(label), list));
@@ -81,6 +84,7 @@ internal static class Catalog
             Add(label, ids.Select(id => operations.FirstOrDefault(o => o.Id == id)).Where(o => o != null).Select(o => o!));
         Add("流程", operations.Where(o => o.Id.StartsWith(Flows.Prefix)));
         Add("其他", operations.Where(o => !placed.Contains(o.Id)));
+        if (customized) groups = groups.OrderBy(g => g.Items.Min(Position)).ToList();
         return groups.Count >= 2 ? groups : null;
     }
 
@@ -208,7 +212,7 @@ internal static class Catalog
     // What the wheel offers for a kind of file, in its current order, for arranging it (one file and several files together).
     public static List<Operation> Sample(string kind, bool tools)
     {
-        string[] extensions = kind switch { "image" => Images, "video" => Video, "audio" => Audio, "model3d" => Models3D, "cad" => CadFormats, "font" => Fonts, "data" => DataTrees, "ebook" => Ebooks, "comic" => Comics, "email" => Emails, "subtitle" => Subtitles, "document" => ["pdf", "txt", "md", "html"], _ => Archives };
+        string[] extensions = SampleExtensions(kind);
         var all = new List<Operation>();
         foreach (string extension in tools ? extensions.Take(1) : extensions)
             foreach (var paths in new[] { new[] { "x." + extension }, new[] { "x." + extension, "y." + extension } })
@@ -216,6 +220,32 @@ internal static class Catalog
                     if (!all.Any(o => o.Id == operation.Id))
                         all.Add(operation);
         return Arrange(all, kind, tools, false);
+    }
+
+    internal static string[] SampleExtensions(string kind) => kind switch
+    {
+        "image" => Images, "video" => Video, "audio" => Audio, "model3d" => Models3D,
+        "cad" => CadFormats, "font" => Fonts, "data" => DataTrees, "ebook" => Ebooks,
+        "comic" => Comics, "email" => Emails, "subtitle" => Subtitles,
+        "document" => ["pdf", "txt", "md", "html"], _ => Archives
+    };
+
+    // Use the exact live-wheel menu for a single or multi-file example without
+    // creating test files or executing operations. The list edits stored order;
+    // only the preview applies the optional last-used promotion.
+    internal static List<Operation> EditorSample(string kind, bool tools, string extension, bool multiple, bool recent = false)
+    {
+        string[] files = multiple ? ["x." + extension, "y." + extension] : ["x." + extension];
+        return Arrange(Build(files, tools), kind, tools, recent);
+    }
+
+    internal static void SaveVisibleOrder(string kind, bool tools, List<string> visible)
+    {
+        var saved = SavedOrder(kind, tools);
+        var full = saved.Concat(Sample(kind, tools).Select(o => o.Id)).Concat(visible).Distinct().ToList();
+        var edited = visible.ToHashSet();
+        int next = 0;
+        SaveOrder(kind, tools, full.Select(id => edited.Contains(id) ? visible[next++] : id).ToList());
     }
 
     private static List<Operation> Build(string[] paths, bool tools)

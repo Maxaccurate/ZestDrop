@@ -26,6 +26,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="EngineChecks" />
     <InternalsVisibleTo Include="TrayMenuChecks" />
+    <InternalsVisibleTo Include="WheelEditorChecks" />
   </ItemGroup>
   <!-- Only the Microsoft Store package needs the Windows SDK (for its startup task); it adds about 25 MB. -->
   <PropertyGroup Condition="'$(Store)' == 'true'">

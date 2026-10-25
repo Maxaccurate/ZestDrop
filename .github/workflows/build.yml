@@ -28,4 +28,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Engine regression checks failed.' }
           dotnet run --project work/TrayMenuChecks -- outputs/tray-menu-checks.json
           if ($LASTEXITCODE -ne 0) { throw 'Tray menu and startup checks failed.' }
+          dotnet run --project work/WheelEditorChecks -- outputs/wheel-editor-checks
+          if ($LASTEXITCODE -ne 0) { throw 'Visual wheel editor checks failed.' }
 

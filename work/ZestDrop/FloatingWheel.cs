@@ -201,6 +201,57 @@ internal sealed class DropWheel : Window
             Highlight(first, operations.FindIndex(o => o.Id == highlightId));
     }
 
+    // Reuse this exact visual tree in the editor without showing a second
+    // floating window, accepting file drops or submitting an operation.
+    internal FrameworkElement AttachEditorPreview(Action<string> select)
+    {
+        Content = null;
+        stage.Background = Brushes.Transparent;
+        stage.FlowDirection = FlowDirection.LeftToRight;
+        stage.PreviewMouseLeftButtonDown += (_, e) =>
+        {
+            var point = e.GetPosition(canvas);
+            int outer = groups != null && openGroup >= 0 ? Hit(second, point, OuterRingInner, OuterRingOuter + 10) : -1;
+            if (outer >= 0) select(groups![openGroup].Items[outer].Id);
+            else
+            {
+                int inner = Hit(first, point, Inner, Outer + 10);
+                if (inner >= 0)
+                    select(groups == null ? operations[inner].Id : groups[inner].Items[0].Id);
+            }
+            e.Handled = true;
+        };
+        return stage;
+    }
+
+    internal void PreviewOptions(List<Operation> choices, string kind, bool toolsMode, string? selectedId)
+    {
+        Recolor();
+        tools = toolsMode;
+        paths = [];
+        groups = toolsMode && Catalog.TwoWheels ? Catalog.Grouped(choices, kind) : null;
+        openGroup = -1;
+        RenderSecond(null);
+        operations = groups == null ? choices : groups.Select((g, i) => new Operation("__group:" + i, g.Label)).ToList();
+        Render(operations);
+        Resize(groups != null ? DoubleSize : SingleSize);
+        stage.Width = stage.Height = StageSize;
+        count.Text = L.T("实时预览");
+        hint.Text = L.T("点击扇区选择");
+        if (groups != null)
+        {
+            int group = groups.FindIndex(g => g.Items.Any(o => o.Id == selectedId));
+            if (group >= 0)
+            {
+                OpenGroup(group);
+                Highlight(second, groups[group].Items.FindIndex(o => o.Id == selectedId));
+            }
+        }
+        else Highlight(first, operations.FindIndex(o => o.Id == selectedId));
+        // Selection captions in the editor must never invite dropping a file.
+        hint.Text = L.T("点击扇区选择");
+    }
+
     public void ChangeMode(bool nextTools)
     {
         tools = nextTools;
@@ -445,6 +496,7 @@ internal sealed class DropWheel : Window
             double labelWidth = Math.Clamp(2 * 119 * Math.Sin(half) - 16, 72, groups != null ? 92 : 112);
             string? preview = groups != null ? Preview(groups[i]) : null;
             AddPetal(first, angle - half + .016, angle + half - .016, Inner, Outer, 119, labelWidth, (actions[i].Recent ? "↻ " : "") + actions[i].Label, preview, groups != null ? 13 : actions.Count > 7 ? 12 : 14, RestingFace, 1);
+            first.Petals[^1].Tag = actions[i].Id;
         }
         UpdateLayout();
     }
@@ -476,6 +528,7 @@ internal sealed class DropWheel : Window
             double middle = direction - total / 2 + width * (i + .5), half = width / 2;
             double labelWidth = Math.Clamp(2 * 242 * Math.Sin(half) - 16, 70, 104);
             AddPetal(second, middle - half + .018, middle + half - .018, OuterRingInner, OuterRingOuter, 242, labelWidth, group.Items[i].Label, null, 12.5, OuterFace, 20);
+            second.Petals[^1].Tag = group.Items[i].Id;
         }
         UpdateLayout();
     }
