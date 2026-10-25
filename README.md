@@ -64,24 +64,20 @@ New files are saved next to the originals and never overwrite anything; a duplic
 
 <p align="center"><strong>Related tools share one window.</strong> Apply one step, continue on the result, undo if needed, and save once.</p>
 
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/images/progress-dark.png" />
-        <img src="docs/images/progress-light.png" alt="Three progress cards: one processing, one paused and one waiting, with Pause, Cancel and Hide buttons" />
-      </picture>
-      <br /><strong>Progress cards</strong><br />Pause, resume, cancel or hide each job.
-    </td>
-    <td width="50%" align="center">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/images/customize-wheel-dark.png" />
-        <img src="docs/images/customize-wheel-light.png" alt="The Customize wheel window listing the picture tools in order, with Move to top, Move up and Move down buttons" />
-      </picture>
-      <br /><strong>Customize wheel</strong><br />Put the options you use most at the top.
-    </td>
-  </tr>
-</table>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/customize-wheel-dark.png" />
+  <img src="docs/images/customize-wheel-light.png" alt="The Customize wheel window: kind of file, menu and sample file choices, the ordered list of picture tools on the left and a live preview of the wheel on the right" />
+</picture>
+
+<p align="center"><strong>Customize wheel.</strong> Drag the list and watch the real wheel change; every change saves by itself.</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/progress-dark.png" />
+    <img src="docs/images/progress-light.png" width="380" alt="Three progress cards: one processing, one paused and one waiting, with Pause, Cancel and Hide buttons" />
+  </picture>
+  <br /><strong>Progress cards.</strong> Pause, resume, cancel or hide each job.
+</p>
 
 ## What it can do
 
@@ -108,6 +104,7 @@ The wheel shows only what fits the files you drag; with several files selected i
 - **Redact PDF.** Black out marked areas and any text you type. The content underneath is removed from the file, not just covered.
 - **Background jobs.** Each job gets a progress card in the corner of the screen. Two jobs run at once and the rest wait their turn; pausing a job suspends it completely, including FFmpeg.
 - **Audio and video previews.** Tool windows have a player with a seek bar and volume, draggable trim handles, and previews of the effect before you save.
+- **Customize wheel** shows the list and a live wheel side by side: drag rows or press Alt+Up / Alt+Down, and pick a file type, menu and sample to arrange each wheel.
 - **Sticky wheel** (optional) keeps the wheel open after you release the mouse, so you can hover and click instead.
 - **Command line.** `zestdrop convert photo.png --to webp`, `zestdrop watch ./inbox --to png` and `zestdrop formats` work from Command Prompt or PowerShell.
 - **Watch folders** process new files automatically, with an optional inbox mode that moves each original into an `originals` folder afterwards.
