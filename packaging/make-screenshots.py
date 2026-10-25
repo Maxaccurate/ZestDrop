@@ -1,12 +1,14 @@
 """Compose 1920x1080 Store screenshots from renders made by the app's debug modes.
 
 Usage: python packaging/make-screenshots.py <renders folder>
-The folder must contain, for each language L in (en, zh):
+The folder must contain, for each language L in (en, zh, ar):
   wheel-L-holiday.png.png   ZestDrop.exe --debug-wheel-render formats <holiday.png> convert:jpg <out>
-  wheel-L-trip.mp4.png      ZestDrop.exe --debug-wheel-render tools <trip.mp4> trimVideo <out>
+  wheel-L-trip.mp4.png      ZestDrop.exe --debug-wheel-render tools <trip.mp4> merge:trimSplit <out>
   tool-L.png                a capture of the combined window: ZestDrop.exe --debug-tool merge:trimSplit <video>, then PrintWindow
   stack-L-expanded.png      ZestDrop.exe --debug-indicator <folder>/stack-L
-(set ZESTDROP_LANG=en or zh when rendering). Output: packaging/screenshots/<lang>-<n>.png
+  editor-L.png              a capture of ZestDrop.exe --debug-window wheel-order, then PrintWindow
+  wheel-L-model.glb.png     ZestDrop.exe --debug-wheel-render formats <model.glb> convert:stl <out>
+(set ZESTDROP_LANG=en, zh or ar when rendering). Output: packaging/screenshots/<lang>-<n>.png
 """
 from pathlib import Path
 import sys
@@ -96,9 +98,9 @@ def wheel_shot(lang, name, tag, color, petal_angle_deg):
     return canvas
 
 
-def window_shot(lang):
+def window_shot(lang, name='tool'):
     canvas = wallpaper()
-    tool = Image.open(SRC / f'tool-{lang}.png').convert('RGBA')
+    tool = Image.open(SRC / f'{name}-{lang}.png').convert('RGBA')
     # Fit the window (captured at the screen's own DPI, so it can be large) inside the canvas, never enlarging it.
     scale = min(1.25, (H - 100) / tool.height, (W - 200) / tool.width)
     tool = tool.resize((int(tool.width * scale), int(tool.height * scale)), Image.LANCZOS)
@@ -126,12 +128,15 @@ def stack_shot(lang):
     return canvas
 
 
-for lang in ('en', 'zh'):
+# Pointer angles are degrees clockwise from the right; each wheel starts at the top (-90) and splits the circle evenly.
+for lang in ('en', 'zh', 'ar'):
     shots = [
         wheel_shot(lang, 'holiday.png', 'PNG', (47, 143, 91), -90),
-        wheel_shot(lang, 'trip.mp4', 'MP4', (109, 79, 209), 45),  # 'Trim & split' is the fourth of eight entries, 45 degrees clockwise of the right
+        wheel_shot(lang, 'trip.mp4', 'MP4', (109, 79, 209), 70),  # 'Trim & split' is the fifth of nine entries
         window_shot(lang),
         stack_shot(lang),
+        window_shot(lang, 'editor'),
+        wheel_shot(lang, 'model.glb', 'GLB', (60, 110, 200), -90 + 360 / 7),  # 'STL' is the second of seven entries
     ]
     for i, shot in enumerate(shots, 1):
         shot.convert('RGB').save(OUT / f'{lang}-{i}.png', optimize=True)
