@@ -31,7 +31,9 @@ $online = Join-Path $outDir "ZestDrop-v$version-windows-x64-online-setup.exe"
 if (Test-Path -LiteralPath $online) { throw "Output already exists: $online" }
 $digest = (Get-FileHash -LiteralPath $offline -Algorithm SHA256).Hash.ToLowerInvariant()
 $url = "https://github.com/Maxaccurate/ZestDrop/releases/download/v$version/ZestDrop-v$version-windows-x64-setup.exe"
+$downloadMB = [math]::Round((Get-Item -LiteralPath $offline).Length / 1e6, 1).ToString([Globalization.CultureInfo]::InvariantCulture)
 & $CompilerPath ('/DAppVersion=' + $version) ('/DInstallerURL=' + $url) ('/DInstallerSHA256=' + $digest) `
+    ('/DDownloadSizeMB=' + $downloadMB) `
     ('/DOutputPath=' + $outDir) ('/DAppIcon=' + (Join-Path $PSScriptRoot 'work/ZestDrop/assets/zestdrop.ico')) `
     '/Q' (Join-Path $PSScriptRoot 'packaging/ZestDrop-online.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Online installer compilation failed.' }

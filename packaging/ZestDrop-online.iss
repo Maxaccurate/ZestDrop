@@ -15,6 +15,9 @@
 #ifndef AppIcon
   #error AppIcon is required.
 #endif
+#ifndef DownloadSizeMB
+  #define DownloadSizeMB "151"
+#endif
 
 [Setup]
 AppId=ZestDropOnlineSetup
@@ -57,25 +60,25 @@ Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
 [CustomMessages]
 english.DownloadTitle=Downloading ZestDrop
 english.DownloadDescription=Keep this window open. The installation wizard will open when the download is ready.
-english.DownloadSummary=This online installer downloads the complete ZestDrop installation package (about 151 MB). An internet connection is required.%n%nClick Install to download and open the installation wizard.
+english.DownloadSummary=This online installer downloads the complete ZestDrop installation package (about {#DownloadSizeMB} MB). An internet connection is required.%n%nClick Install to download and open the installation wizard.
 english.DownloadFailed=The download failed or the file is incomplete. Check your connection and try again, or use the offline installer from the ZestDrop release page.
 english.DownloadCancelled=The download was cancelled. Nothing was installed.
 english.LaunchFailed=The installation wizard could not be opened. Please try the offline installer from the ZestDrop release page.
 chinesesimplified.DownloadTitle=正在下载 ZestDrop
 chinesesimplified.DownloadDescription=请保持窗口打开，下载完成后将打开安装向导。
-chinesesimplified.DownloadSummary=联网安装器将下载完整的 ZestDrop 安装包（约 151 MB），需要连接互联网。%n%n点击“安装”开始下载，完成后进入安装向导。
+chinesesimplified.DownloadSummary=联网安装器将下载完整的 ZestDrop 安装包（约 {#DownloadSizeMB} MB），需要连接互联网。%n%n点击“安装”开始下载，完成后进入安装向导。
 chinesesimplified.DownloadFailed=下载失败或文件不完整。请检查网络后重试，也可从 ZestDrop 发布页面下载离线安装版。
 chinesesimplified.DownloadCancelled=下载已取消，未安装任何内容。
 chinesesimplified.LaunchFailed=无法打开安装向导，请从 ZestDrop 发布页面下载离线安装版后重试。
 chinesetraditional.DownloadTitle=正在下載 ZestDrop
 chinesetraditional.DownloadDescription=請保持視窗開啟，下載完成後將開啟安裝精靈。
-chinesetraditional.DownloadSummary=線上安裝程式將下載完整的 ZestDrop 安裝套件（約 151 MB），需要連線至網際網路。%n%n按一下「安裝」開始下載，完成後進入安裝精靈。
+chinesetraditional.DownloadSummary=線上安裝程式將下載完整的 ZestDrop 安裝套件（約 {#DownloadSizeMB} MB），需要連線至網際網路。%n%n按一下「安裝」開始下載，完成後進入安裝精靈。
 chinesetraditional.DownloadFailed=下載失敗或檔案不完整。請檢查網路後重試，也可從 ZestDrop 發布頁面下載離線安裝版。
 chinesetraditional.DownloadCancelled=下載已取消，未安裝任何內容。
 chinesetraditional.LaunchFailed=無法開啟安裝精靈，請從 ZestDrop 發布頁面下載離線安裝版後重試。
 arabic.DownloadTitle=جارٍ تنزيل ZestDrop
 arabic.DownloadDescription=اترك هذه النافذة مفتوحة. سيفتح معالج التثبيت عند اكتمال التنزيل.
-arabic.DownloadSummary=سيتم تنزيل حزمة تثبيت ZestDrop الكاملة (حوالي 151 ميغابايت). يلزم الاتصال بالإنترنت.%n%nانقر على تثبيت لبدء التنزيل وفتح معالج التثبيت.
+arabic.DownloadSummary=سيتم تنزيل حزمة تثبيت ZestDrop الكاملة (حوالي {#DownloadSizeMB} ميغابايت). يلزم الاتصال بالإنترنت.%n%nانقر على تثبيت لبدء التنزيل وفتح معالج التثبيت.
 arabic.DownloadFailed=فشل التنزيل أو أن الملف غير مكتمل. تحقق من اتصالك وحاول مرة أخرى، أو استخدم برنامج التثبيت دون اتصال من صفحة إصدارات ZestDrop.
 arabic.DownloadCancelled=تم إلغاء التنزيل. لم يتم تثبيت أي شيء.
 arabic.LaunchFailed=تعذر فتح معالج التثبيت. استخدم برنامج التثبيت دون اتصال من صفحة إصدارات ZestDrop.

@@ -1,0 +1,48 @@
+{
+  "version": "1.2.1",
+  "date": "2026-10-25",
+  "passed": 250,
+  "failed": 0,
+  "suites": [
+    {
+      "suite": "native engine regressions",
+      "passed": 101,
+      "failed": 0
+    },
+    {
+      "suite": "tool parameters",
+      "passed": 44,
+      "failed": 0
+    },
+    {
+      "suite": "progress and live wheel",
+      "passed": 70,
+      "failed": 0
+    },
+    {
+      "suite": "UI controls and startup provider",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "tray welcome and startup state",
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "suite": "visual wheel editor",
+      "passed": 10,
+      "failed": 0
+    }
+  ],
+  "manual_scope": [
+    "Isolated actual menu clicks: reopen welcome despite hide-at-start preference; startup enable, reopen and disable.",
+    "Isolated visual editor: sector-to-list selection, drag ordering, keyboard adjustment and single/batch example switching.",
+    "Editor renders in English, Simplified Chinese and Arabic with light/dark and single/two-level layouts."
+  ],
+  "limits": [
+    "Windows sign-in cycle not re-tested.",
+    "Office automation not re-tested.",
+    "Not exhaustive multi-monitor or display-scaling interaction validation."
+  ]
+}
