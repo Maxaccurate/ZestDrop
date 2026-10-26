@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ internal static class Checks
     public static int Main(string[] args)
     {
         var app = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
+        SynchronizationContext.SetSynchronizationContext(new System.Windows.Threading.DispatcherSynchronizationContext(app.Dispatcher));
         string output = Path.GetFullPath(args.Length > 0 ? args[0] : "outputs/tray-menu-checks.json");
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         string settings = Path.Combine(Path.GetTempPath(), "zestdrop-tray-check-" + Guid.NewGuid().ToString("N") + ".json");
@@ -132,6 +134,99 @@ internal static class Checks
                 Pump();
                 Require(item.IsDisposed);
             });
+            Check("welcome startup clicks persist in the registry across reopening", () =>
+            {
+                var provider = new RegistryStartupProvider(registry, "ZestDrop", @"C:\Apps with spaces\ZestDrop.exe");
+                provider.SetAsync(false).GetAwaiter().GetResult();
+                StartupManager.ProviderOverride = provider;
+                var window = new WelcomeWindow();
+                try
+                {
+                    Require(StartupBox(window).IsChecked == false && StartupBox(window).IsEnabled);
+                    ClickStartup(window);
+                    Until(() => StartupBox(window).IsEnabled);
+                    Require(StartupBox(window).IsChecked == true && provider.GetAsync().Result.Enabled);
+                }
+                finally { window.Close(); }
+                window = new WelcomeWindow();
+                try
+                {
+                    Require(StartupBox(window).IsChecked == true);
+                    ClickStartup(window);
+                    Until(() => StartupBox(window).IsEnabled);
+                    Require(StartupBox(window).IsChecked == false && !provider.GetAsync().Result.Enabled);
+                }
+                finally { window.Close(); }
+            });
+            Check("a stale welcome refresh cannot overwrite a newer startup click", () =>
+            {
+                var provider = new FakeProvider();
+                StartupManager.ProviderOverride = provider;
+                var window = new WelcomeWindow();
+                try
+                {
+                    var read = new TaskCompletionSource<StartupStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    provider.NextRead = read.Task;
+                    RefreshWelcome(window);
+                    ClickStartup(window);
+                    Until(() => provider.Enabled && StartupBox(window).IsEnabled);
+                    read.SetResult(new StartupStatus(false)); Pump();
+                    Require(StartupBox(window).IsChecked == true);
+                }
+                finally { window.Close(); }
+            });
+            Check("welcome refreshes and layout rebuilds keep a pending startup change disabled", () =>
+            {
+                var write = new TaskCompletionSource<StartupStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var provider = new FakeProvider { PendingWrite = write.Task };
+                StartupManager.ProviderOverride = provider;
+                var window = new WelcomeWindow();
+                try
+                {
+                    ClickStartup(window);
+                    Require(!StartupBox(window).IsEnabled && provider.Writes == 1);
+                    RefreshWelcome(window);
+                    Require(!StartupBox(window).IsEnabled && StartupBox(window).IsChecked == true);
+                    window.GetType().GetMethod("Rebuild", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, null);
+                    Require(!StartupBox(window).IsEnabled);
+                    write.SetResult(new StartupStatus(true));
+                    Until(() => StartupBox(window).IsEnabled);
+                    Require(StartupBox(window).IsChecked == true && provider.Writes == 1);
+                }
+                finally { window.Close(); }
+            });
+            Check("a failed welcome change restores its checkbox and explains the error", () =>
+            {
+                StartupManager.ProviderOverride = new FakeProvider { FailWrite = true };
+                var window = new WelcomeWindow();
+                try
+                {
+                    ClickStartup(window);
+                    Until(() => StartupBox(window).IsEnabled);
+                    Require(StartupBox(window).IsChecked == false);
+                    var message = (System.Windows.Controls.TextBlock)window.GetType().GetField("startupMessage", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window)!;
+                    Require(message.Text.Contains("Test access denial"));
+                    var button = (System.Windows.Controls.Button)window.GetType().GetField("startupSettings", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window)!;
+                    Require(button.Visibility == System.Windows.Visibility.Visible);
+                }
+                finally { window.Close(); }
+            });
+            Check("closed welcome windows ignore pending startup reads", () =>
+            {
+                var read = new TaskCompletionSource<StartupStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
+                StartupManager.ProviderOverride = new FakeProvider { NextRead = read.Task };
+                var window = new WelcomeWindow();
+                var checkbox = StartupBox(window);
+                window.Close();
+                read.SetResult(new StartupStatus(true)); Pump();
+                Require(checkbox.IsChecked != true && !checkbox.IsEnabled);
+            });
+            Check("an OS startup request that is not saved explains how to resolve it", () =>
+            {
+                StartupManager.ProviderOverride = new FakeProvider { RefuseWrite = true };
+                var status = StartupManager.SetAsync(true).GetAwaiter().GetResult();
+                Require(!status.Enabled && status.Message?.Contains("Windows") == true);
+            });
         }
         finally
         {
@@ -147,6 +242,13 @@ internal static class Checks
         return failed == 0 ? 0 : 1;
     }
     private static void Require(bool okay) { if (!okay) throw new Exception("Unexpected tray menu state."); }
+    private static System.Windows.Controls.CheckBox StartupBox(WelcomeWindow window) =>
+        (System.Windows.Controls.CheckBox)window.GetType().GetField("startup", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window)!;
+    // Invoke the real WPF toggle/click path, using an isolated window and startup provider.
+    private static void ClickStartup(WelcomeWindow window) => typeof(System.Windows.Controls.CheckBox)
+        .GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(StartupBox(window), null);
+    private static void RefreshWelcome(WelcomeWindow window) => window.GetType()
+        .GetMethod("RefreshStartup", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, null);
     private static void Until(Func<bool> ready)
     {
         var clock = Stopwatch.StartNew();
@@ -160,7 +262,7 @@ internal static class Checks
     }
     private sealed class FakeProvider : IStartupProvider
     {
-        public bool Enabled, FailWrite, Blocked;
+        public bool Enabled, FailWrite, Blocked, RefuseWrite;
         public int Writes;
         public Task<StartupStatus>? NextRead, PendingWrite;
         public Task<StartupStatus> GetAsync()
@@ -172,7 +274,7 @@ internal static class Checks
         {
             Writes++;
             if (FailWrite) throw new UnauthorizedAccessException("Test access denial");
-            var status = PendingWrite == null ? new StartupStatus(enabled) : await PendingWrite;
+            var status = PendingWrite == null ? new StartupStatus(RefuseWrite ? Enabled : enabled) : await PendingWrite;
             Enabled = status.Enabled;
             return status;
         }

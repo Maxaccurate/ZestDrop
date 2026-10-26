@@ -13,6 +13,8 @@ internal sealed class WelcomeWindow : Window
     private CheckBox? startup;
     private TextBlock? startupMessage;
     private Button? startupSettings;
+    private bool changingStartup, closed;
+    private int startupRevision;
 
     public WelcomeWindow()
     {
@@ -25,8 +27,9 @@ internal sealed class WelcomeWindow : Window
         // Re-read every label if the language changes while the window is open (from the buttons below or the tray menu).
         L.Changed += Rebuild;
         StartupManager.Changed += RefreshStartup;
+        Activated += (_, _) => RefreshStartup();
         Closed += (_, _) => L.Changed -= Rebuild;
-        Closed += (_, _) => StartupManager.Changed -= RefreshStartup;
+        Closed += (_, _) => { closed = true; ++startupRevision; StartupManager.Changed -= RefreshStartup; };
         Rebuild();
     }
 
@@ -68,15 +71,27 @@ internal sealed class WelcomeWindow : Window
         var pinWheel = new CheckBox { Content = L.T("固定菜单（松手不关闭）"), IsChecked = Settings.GetBool(DropWheel.PinnedKey, false), Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("固定菜单（松开鼠标按键不关闭，点击选项或空白处关闭）"), Foreground = UiTheme.Muted };
         pinWheel.Click += (_, _) => Settings.Set(DropWheel.PinnedKey, pinWheel.IsChecked == true);
         panel.Children.Add(pinWheel);
-        startup = new CheckBox { Content = L.T("开机自启"), IsEnabled = false, Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("登录 Windows 后在后台运行，不打开欢迎窗口。") };
+        var startupControl = startup = new CheckBox { Content = L.T("开机自启"), IsEnabled = false, Margin = new Thickness(0, 6, 0, 0), ToolTip = L.T("登录 Windows 后在后台运行，不打开欢迎窗口。") };
         startupMessage = new TextBlock { Foreground = UiTheme.Muted, FontSize = 11, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(6, 3, 0, 0) };
         startupSettings = new Button { Content = L.T("Windows 启动应用设置"), Visibility = Visibility.Collapsed, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(6, 5, 0, 0) };
         startupSettings.Click += (_, _) => StartupManager.OpenWindowsSettings();
-        startup.Click += async (_, _) =>
+        startupControl.Click += async (_, _) =>
         {
-            startup.IsEnabled = false;
-            var status = await StartupManager.SetAsync(startup.IsChecked == true);
-            UpdateStartup(status);
+            if (closed || changingStartup) return;
+            // Capture the clicked control before disabling it or awaiting the OS.
+            // A refresh or language rebuild must not replace this requested state.
+            bool requested = startupControl.IsChecked == true;
+            changingStartup = true;
+            ++startupRevision;
+            startupControl.IsEnabled = false;
+            try
+            {
+                var status = await StartupManager.SetAsync(requested);
+                if (StartupManager.ProviderOverride == null)
+                    Journal.Write("StartupChanged", new { requested, status.Enabled, status.CanChange, status.Message });
+                if (!closed) UpdateStartup(status);
+            }
+            finally { changingStartup = false; }
         };
         panel.Children.Add(startup); panel.Children.Add(startupMessage); panel.Children.Add(startupSettings);
         RefreshStartup();
@@ -99,7 +114,13 @@ internal sealed class WelcomeWindow : Window
         panel.Children.Add(footer);
         return panel;
     }
-    private async void RefreshStartup() => UpdateStartup(await StartupManager.GetAsync());
+    private async void RefreshStartup()
+    {
+        if (closed || changingStartup) return;
+        int revision = ++startupRevision;
+        var status = await StartupManager.GetAsync();
+        if (!closed && !changingStartup && revision == startupRevision) UpdateStartup(status);
+    }
     private void UpdateStartup(StartupStatus status)
     {
         if (startup == null || startupMessage == null || startupSettings == null) return;

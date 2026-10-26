@@ -49,6 +49,8 @@ internal static class StartupManager
         try
         {
             var status = await Provider.SetAsync(enabled);
+            if (status.Enabled != enabled && status.Message == null)
+                status = status with { Message = L.T("Windows 未保存开机自启设置，请在系统启动应用设置中更改。") };
             Changed?.Invoke();
             return status;
         }

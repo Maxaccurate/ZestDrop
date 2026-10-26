@@ -230,7 +230,7 @@ internal sealed class Resident : IDisposable
         _ = WorkQueue();
         watch = new WatchFolders(Enqueue);
         watch.Reload();
-        Journal.Write("Started", new { noMainWindow = true, modifierShortcuts = true, dragFunctionKeys = true });
+        Journal.Write("Started", new { noMainWindow = true, modifierShortcuts = true, dragFunctionKeys = true, startupLaunch });
         // ZestDrop only starts when someone launches it, so show how to use it. People who prefer the quiet start
         // can switch the window off; they still get the tray notification.
         if (startupLaunch) { /* Sign-in launches stay quiet. */ }

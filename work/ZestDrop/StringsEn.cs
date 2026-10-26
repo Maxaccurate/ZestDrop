@@ -63,6 +63,7 @@ internal static partial class L
         ["第三方组件许可"] = "Third-party notices",
         ["退出 ZestDrop"] = "Quit ZestDrop",
         ["开机自启"] = "Start with Windows",
+        ["Windows 未保存开机自启设置，请在系统启动应用设置中更改。"] = "Windows did not save the startup setting. Change it in Windows startup app settings.",
         ["登录 Windows 后在后台运行，不打开欢迎窗口。"] = "Run quietly in the background after signing in to Windows.",
         ["Windows 启动应用设置"] = "Windows startup app settings",
         ["Windows 已禁用自启，请在系统启动应用设置中更改。"] = "Windows has disabled startup. Change this in Windows startup app settings.",
