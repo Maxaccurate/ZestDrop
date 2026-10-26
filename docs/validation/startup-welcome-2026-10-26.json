@@ -1,0 +1,58 @@
+{
+  "passed": 13,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "welcome is directly available even when hidden at launch",
+      "passed": true
+    },
+    {
+      "name": "real menu clicks enable and disable startup and persist across menu recreation",
+      "passed": true
+    },
+    {
+      "name": "a failed startup write restores the real check state and reports the problem",
+      "passed": true
+    },
+    {
+      "name": "a delayed refresh cannot undo a newer startup choice",
+      "passed": true
+    },
+    {
+      "name": "pending changes disable repeated clicks and ignore refreshes until completion",
+      "passed": true
+    },
+    {
+      "name": "system-disabled startup keeps the toggle disabled and settings remain accessible",
+      "passed": true
+    },
+    {
+      "name": "disposing a menu while a read is pending does not resurrect it",
+      "passed": true
+    },
+    {
+      "name": "welcome startup clicks persist in the registry across reopening",
+      "passed": true
+    },
+    {
+      "name": "a stale welcome refresh cannot overwrite a newer startup click",
+      "passed": true
+    },
+    {
+      "name": "welcome refreshes and layout rebuilds keep a pending startup change disabled",
+      "passed": true
+    },
+    {
+      "name": "a failed welcome change restores its checkbox and explains the error",
+      "passed": true
+    },
+    {
+      "name": "closed welcome windows ignore pending startup reads",
+      "passed": true
+    },
+    {
+      "name": "an OS startup request that is not saved explains how to resolve it",
+      "passed": true
+    }
+  ]
+}
